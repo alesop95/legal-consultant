@@ -1,0 +1,33 @@
+# === Segreti e ambiente ===
+.env
+
+# === Sistema di progetto portabile: livello privato e ignorato (PROJECT-SYSTEM §6/10) ===
+_notes/
+CLAUDE.local.md
+.claude/settings.local.json
+_notes/.tmp-docx-*/
+.tmp-docx-*/
+# Documenti Word grezzi (binari). Dichiarare qui eventuali eccezioni curate, es:
+#   !docs/specifica-ufficiale.docx
+*.docx
+
+# === Dati locali rigenerabili ===
+# L'indice FTS5 si ricostruisce dal corpus; il corpus e' un submodule (tracciato come gitlink).
+data/index/
+
+# === Python (versiona il manifesto, ignora il derivato — §13) ===
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# === Node ===
+node_modules/
+
+# === OS / editor ===
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
