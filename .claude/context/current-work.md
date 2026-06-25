@@ -1,12 +1,12 @@
 ---
-generated-from-commit: PENDING-FIRST-COMMIT
+generated-from-commit: 1e4c79b
 generated-from-branch: main
 generated-date: 2026-06-25
 covers-paths:
   - src/legal_consultant/ingest/**
   - src/legal_consultant/index/**
   - scripts/bootstrap_index.py
-last-verified-commit: PENDING-FIRST-COMMIT
+last-verified-commit: 1e4c79b
 stato: in pianificazione
 ---
 
@@ -39,18 +39,26 @@ File da modificare:
 
 Definition of done:
 
-- [ ] `italia-corpus` aggiunto come submodule sotto `data/`
-- [ ] schema reale del frontmatter YAML ispezionato su atti rappresentativi
-- [ ] parser MD+YAML che produce chunk per articolo con metadati (urn, atto, articolo, vigente)
-- [ ] indice FTS5 costruito da `bootstrap_index.py`
-- [ ] query di test restituiscono gli articoli pertinenti con ranking BM25 sensato
+- [x] schema reale del frontmatter YAML ispezionato su atti rappresentativi (via API GitHub)
+- [x] scaffolding Python (uv, layout src/, pyproject) e toolchain verificata (Python 3.13/uv)
+- [x] parser MD+YAML che produce chunk per articolo con metadati (urn, atto, articolo, vigente)
+- [x] indice FTS5 (build/upsert/search BM25 + filtro vigenti) e `bootstrap_index.py` scritti
+- [x] test end-to-end su 2 atti reali (fixture): parser + ricerca BM25 verdi (`uv run pytest`)
+- [ ] `italia-corpus` aggiunto come submodule shallow sotto `data/` (passo pesante, da fare)
+- [ ] `bootstrap_index.py` eseguito sull'intero corpus e query di sanità sul reale
+
+Stato: nucleo della pipeline implementato e testato su fixture; manca il clone del corpus e la
+prima indicizzazione completa.
 
 Domande aperte:
 
-- Schema esatto del frontmatter: da verificare sul campo prima di scrivere il parser (ADR-004).
-- Tokenizzazione FTS5 per l'italiano: `unicode61` con `remove_diacritics` + stopword e gestione
-  delle abbreviazioni giuridiche (art., c.c., d.lgs.) — da tarare in Fase 1.
+- Tokenizzazione FTS5 per l'italiano: `unicode61 remove_diacritics 2` scelto; stopword e gestione
+  delle abbreviazioni giuridiche (art., c.c., d.lgs.) da valutare misurando sul corpus reale.
+- Robustezza del parser su tutte le collezioni (numerazione articoli "N-bis", allegati, note):
+  da validare sul reale dopo il bootstrap; il regex `_ARTICLE_RE` copre i casi visti finora.
 
 ## Riconciliazione
 
-Ultima verifica: 2026-06-25 al commit PENDING-FIRST-COMMIT (pre-codice, feature in pianificazione).
+Ultima verifica: 2026-06-25. Codice della Fase 1 scritto e testato su fixture; le schede sono
+avanti rispetto a `last-verified-commit` (1e4c79b) finché non si committa e si rilancia
+`sync-context`.

@@ -1,9 +1,9 @@
 ---
-generated-from-commit: PENDING-FIRST-COMMIT
+generated-from-commit: 1e4c79b
 generated-from-branch: main
 generated-date: 2026-06-25
 covers-paths: []
-last-verified-commit: PENDING-FIRST-COMMIT
+last-verified-commit: 1e4c79b
 ---
 
 # Roadmap
