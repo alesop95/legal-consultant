@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from legal_consultant import update
 from legal_consultant.index import fts
 from legal_consultant.ingest.parser import parse_act
 
@@ -80,3 +81,44 @@ def test_corpus_stats():
     n_atti, n_chunks = fts.corpus_stats(conn)
     assert n_atti == 2  # le due fixture
     assert n_chunks >= n_atti
+
+
+def test_to_match_query_sanifica():
+    assert fts.to_match_query("responsabilità amministrativa") == '"responsabilità" OR "amministrativa"'
+    assert fts.to_match_query("") == ""
+    assert fts.to_match_query("   ...   ") == ""  # solo punteggiatura: nessun token
+
+
+def test_search_input_malformato_non_crasha():
+    conn = _build_index()
+    # Input che sarebbero sintassi MATCH invalida vengono sanificati, non sollevano.
+    for q in ['"', "*", "NEAR(", "art. 2087 c.c.", "codice OR penale", "(())"]:
+        fts.search(conn, q)  # non deve sollevare OperationalError
+    # Query senza token: nessuna interrogazione, lista vuota.
+    assert fts.search(conn, "   ...   ") == []
+
+
+def test_reindex_incrementale():
+    conn = _build_index()
+    rel = "Codici/giustizia_contabile.md"
+    before = fts.get_act(conn, path=rel)
+    assert before, "atto assente nell'indice di partenza"
+
+    # Cancellazione: l'atto sparisce dall'indice.
+    assert update.reindex_paths(conn, FIX, changed=[], deleted=[rel]) == 0
+    assert fts.get_act(conn, path=rel) == []
+
+    # Reinserimento dal disco: stessi chunk reindicizzati.
+    n = update.reindex_paths(conn, FIX, changed=[rel], deleted=[])
+    assert n == len(before)
+    assert fts.get_act(conn, path=rel)
+
+
+def test_state_roundtrip(tmp_path):
+    sp = tmp_path / "index" / "state.json"
+    assert update.read_state(sp) is None  # assente
+    written = update.write_state(sp, "abc1234", "2026-06-30T00:00:00+00:00", 10, 42)
+    assert written["atti"] == 10 and written["chunk"] == 42
+    back = update.read_state(sp)
+    assert back["corpus_commit"] == "abc1234"
+    assert back["reindicizzato_il"]  # timestamp presente

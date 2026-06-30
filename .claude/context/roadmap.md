@@ -3,7 +3,7 @@ generated-from-commit: 1e4c79b
 generated-from-branch: main
 generated-date: 2026-06-25
 covers-paths: []
-last-verified-commit: 6111cd3
+last-verified-commit: f954aaa
 ---
 
 # Roadmap
@@ -21,14 +21,18 @@ citazioni verificabili.
 
 1. Fase 0+1 — Setup repo e pipeline di ingestion/indice FTS5 (fatta, committata in `6111cd3`;
    testata su fixture). Resta il clone del corpus e la prima indicizzazione completa.
-2. Fase 2 — Server MCP "legge-it" (`cerca_normativa`, `leggi_atto`, `info_corpus`). Codice del
-   server fatto e testato su fixture (feature attiva, da committare). Restano la registrazione in
-   Claude Desktop e il Project con istruzioni + disclaimer. La validazione che il piano Team
-   consenta server MCP locali (ADR-002) si considera risolta in positivo: la stessa macchina usa
-   già il server MCP locale `obsidian-vaults` in Claude Desktop.
-3. Fase 3 — Aggiornamento automatico (git pull + reindex incrementale via git diff, schedulato).
-4. Fase 4+ — Backlog: ricerca ibrida con embedding leggero CPU se il recall lessicale non basta;
-   diritto UE (EUR-Lex); anonimizzazione opzionale pre-invio.
+2. Fase 2 — Server MCP "legge-it" (`cerca_normativa`, `leggi_atto`, `info_corpus`). Fatta e testata
+   su fixture, con hardening della ricerca e prompt MCP delle istruzioni. ADR-002 (server MCP
+   locali sul piano Team) risolto in positivo: la stessa macchina usa già `obsidian-vaults`.
+3. Fase 3 — Aggiornamento automatico (git pull + reindex incrementale via git diff). Codice fatto
+   (package `update` + `scripts/update_corpus.py`); resta da schedulare con Task Scheduler e da
+   validare sul corpus reale.
+4. Packaging trasparente — registrazione versionata in `.mcp.json` (Claude Code), setup a un
+   comando (`scripts/setup.py`), istruzioni e disclaimer (`prompts/consulente-legale.md` + prompt
+   MCP). Fatto a livello di codice; resta la verifica end-to-end nei due client sul corpus reale.
+5. Fase 4+ — Backlog: ricerca ibrida con embedding leggero CPU se il recall lessicale non basta;
+   diritto UE (EUR-Lex); anonimizzazione opzionale pre-invio; indice pre-costruito distribuibile
+   per saltare il bootstrap pesante al primo uso.
 
 ## Idee e ipotesi da verificare
 

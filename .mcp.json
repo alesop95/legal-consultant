@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "legge-it": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "legal_consultant.mcp_server"]
+    }
+  }
+}

@@ -5,7 +5,8 @@ generated-date: 2026-06-25
 covers-paths:
   - scripts/**
   - src/legal_consultant/mcp_server.py
-last-verified-commit: 6111cd3
+  - .mcp.json
+last-verified-commit: f954aaa
 ---
 
 # Deployment
@@ -24,17 +25,29 @@ consuma i tool; la chat passa per l'abbonamento Team, il resto non lascia la mac
 
 ## Comandi
 
-Ambiente: `uv sync --extra dev` materializza runtime e strumenti di test. Prima indicizzazione del
-corpus, dopo aver aggiunto il submodule: `uv run python scripts/bootstrap_index.py` (ricostruisce
-l'indice da zero). Sanità manuale sull'indice: `uv run python scripts/query.py "<query>" [limit]`.
-Avvio del server MCP a mano, per diagnosi: `uv run python -m legal_consultant.mcp_server` (resta in
-ascolto su stdio; in uso normale è Claude Desktop a lanciarlo). L'aggiornamento incrementale
-(`update_corpus.py`, pull + reindex) è di Fase 3 e non esiste ancora.
+Setup a un comando per l'utente finale, dopo aver clonato il repo: `uv run python scripts/setup.py`
+inizializza il submodule del corpus in shallow, sincronizza l'ambiente e costruisce l'indice.
+L'aggiunta iniziale del submodule (`git submodule add`) resta un passo manuale del manutentore,
+eseguito una volta, perché modifica `.gitmodules`. I singoli passi a mano: `uv sync --extra dev`
+per ambiente e strumenti di test; `uv run python scripts/bootstrap_index.py` per ricostruire
+l'indice da zero; `uv run python scripts/query.py "<query>" [limit]` per la sanità sull'indice;
+`uv run python -m legal_consultant.mcp_server` per avviare il server a mano in diagnosi (resta in
+ascolto su stdio; in uso normale è il client a lanciarlo).
 
-## Registrazione in Claude Desktop
+Aggiornamento del corpus (Fase 3): `uv run python scripts/update_corpus.py` fa il pull del
+submodule, reindicizza i soli atti cambiati via `git diff` e salva lo stato in `state.json`. Si
+schedula con Windows Task Scheduler (esecuzione giornaliera del comando nella cartella del
+progetto) per tenere la legge aggiornata senza intervento.
 
-Si aggiunge una voce alla sezione `mcpServers` del `claude_desktop_config.json` dell'account. Il
-comando avvia il server nella cartella del progetto tramite `uv`.
+## Registrazione nel client
+
+Claude Code: la registrazione è versionata in `.mcp.json` in radice. Chi apre il progetto in Claude
+Code vede il server `legge-it` proposto e lo approva una volta; il comando (`uv run python -m
+legal_consultant.mcp_server`) gira con working directory sul progetto, quindi è portabile fra
+macchine senza percorsi assoluti.
+
+Claude Desktop: si aggiunge una voce alla sezione `mcpServers` del `claude_desktop_config.json`
+dell'account, con il percorso assoluto del progetto.
 
 ```json
 "legge-it": {
@@ -43,10 +56,10 @@ comando avvia il server nella cartella del progetto tramite `uv`.
 }
 ```
 
-Se il processo di Claude Desktop non trova `uv` sul PATH, si sostituisce `"uv"` con il percorso
-assoluto dell'eseguibile. Dopo la registrazione si crea un Project "Consulente Legale" con
-istruzioni custom (usa sempre i tool `legge-it`, cita atto e articolo con l'URN, dichiara quando
-l'informazione non è nel corpus, includi il disclaimer), come da HANDOFF sezione 5.4.
+Se il processo del client non trova `uv` sul PATH, si sostituisce `"uv"` con il percorso assoluto
+dell'eseguibile. Per Claude Desktop si crea poi un Project "Consulente Legale" incollando le
+istruzioni di `prompts/consulente-legale.md` (che includono il disclaimer); su Claude Code le
+stesse istruzioni sono esposte dal server come prompt MCP `consulenza_legale`.
 
 ## Variabili d'ambiente e segreti
 

@@ -6,9 +6,27 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
-## 2026-06-30 — Fase 2: server MCP "legge-it" (su fixture)
+## 2026-06-30 — Hardening, Fase 3, packaging trasparente e disclaimer (su fixture)
 
 Commit: (non ancora committato)
+File toccati: `src/legal_consultant/index/fts.py` (+ `to_match_query`, `search` con `sanitize`);
+`src/legal_consultant/update/__init__.py` (nuovo: `corpus_revision`, `pull`, `changed_files`,
+`reindex_paths`, `read_state`/`write_state`); `src/legal_consultant/mcp_server.py` (`info_corpus`
+con freschezza + disclaimer; prompt MCP `consulenza_legale`); `scripts/update_corpus.py` (nuovo);
+`scripts/setup.py` (nuovo); `.mcp.json` (nuovo, registrazione Claude Code); `prompts/consulente-legale.md`
+(nuovo); `tests/test_pipeline.py` (+4 test). Aggiornate le schede `STACK.md`, `current-work.md`,
+`deployment.md`, `design-and-security.md`, `dev-testing.md`, `roadmap.md` e `memory/index.md`.
+Motivo: completato lo sviluppo del prodotto su decisione dell'utente (target Claude Code +
+Desktop; scope: hardening, packaging, Fase 3, disclaimer). Hardening: la ricerca sanifica l'input
+libero in una query MATCH sempre valida. Fase 3: aggiornamento incrementale del corpus via git
+diff + reindex per path, con stato persistito letto da `info_corpus`. Packaging: registrazione
+versionata in `.mcp.json`, setup a un comando, istruzioni e disclaimer esposti anche come prompt
+MCP. `uv run pytest` → 9 test verdi; smoke di tool e prompt su fixture ok; avvio stdio pulito.
+Corpus ancora non clonato: verifica end-to-end e casi d'uso rinviati al bootstrap reale.
+
+## 2026-06-30 — Fase 2: server MCP "legge-it" (su fixture)
+
+Commit: f954aaa
 File toccati: `src/legal_consultant/mcp_server.py` (nuovo); `src/legal_consultant/index/fts.py`
 (+ `get_act`, + `corpus_stats`; `search` ora include `vigente` nel SELECT); `pyproject.toml`
 (+ dipendenza `mcp>=1.2`); `uv.lock`; `tests/test_pipeline.py` (+ test `get_act` e `corpus_stats`).

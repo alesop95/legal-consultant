@@ -5,7 +5,12 @@ generated-date: 2026-06-25
 covers-paths:
   - src/legal_consultant/mcp_server.py
   - src/legal_consultant/index/**
-last-verified-commit: 6111cd3
+  - src/legal_consultant/update/**
+  - scripts/setup.py
+  - scripts/update_corpus.py
+  - .mcp.json
+  - prompts/**
+last-verified-commit: f954aaa
 stato: in lavorazione
 ---
 
@@ -42,27 +47,33 @@ Definition of done:
 - [x] server `FastMCP("legge-it")` su transport stdio, avviabile con `python -m legal_consultant.mcp_server`
 - [x] `cerca_normativa`, `leggi_atto`, `info_corpus` con descrizioni orientate alla citazione
 - [x] layer dati `fts.get_act` / `fts.corpus_stats` e degrado con grazia se l'indice manca
-- [x] test verdi (5: parser, BM25, vigenti, get_act, corpus_stats) e smoke dei tre tool su fixture
-- [ ] registrazione del server in `claude_desktop_config.json` (passo manuale dell'utente)
-- [ ] Project "Consulente Legale" in Claude Desktop con istruzioni custom + disclaimer
-- [ ] verifica end-to-end in Claude Desktop sul corpus reale (richiede prima il bootstrap)
+- [x] hardening: `fts.to_match_query` sanifica l'input libero (nessun errore MATCH); test dedicati
+- [x] Fase 3: package `update` (revisione, diff, reindex incrementale, stato) + `scripts/update_corpus.py`
+- [x] `info_corpus` riporta freschezza del corpus (state.json o git del submodule) e disclaimer
+- [x] packaging: `.mcp.json` (Claude Code) + `scripts/setup.py` (setup a un comando) + prompt MCP
+- [x] disclaimer e istruzioni: `prompts/consulente-legale.md` e prompt `consulenza_legale`
+- [x] test verdi (9 totali) e smoke dei tre tool + prompt su fixture
+- [ ] `git submodule add` del corpus (passo manuale del manutentore) e prima indicizzazione completa
+- [ ] verifica end-to-end in Claude Code e Claude Desktop sul corpus reale
+- [ ] Project "Consulente Legale" in Claude Desktop con le istruzioni di `prompts/consulente-legale.md`
 
-Stato: codice del server implementato e verificato su indice di fixture (5 test verdi + smoke dei
-tre tool). Restano la registrazione in Claude Desktop e la verifica end-to-end, che presuppone il
-clone del corpus e la prima indicizzazione completa (passo pesante ancora in sospeso dalla Fase 1).
+Stato: sviluppo del prodotto completato e verificato su indice di fixture (9 test verdi + smoke di
+tool e prompt). Restano i passi che richiedono il corpus reale: l'aggiunta del submodule e la prima
+indicizzazione, poi la verifica end-to-end nei due client e i casi d'uso specifici.
 
 Domande aperte:
 
-- Sintassi MATCH di FTS5: una `query` con caratteri speciali della sintassi FTS5 (virgolette, `*`,
-  `NEAR`) può sollevare un errore SQL invece di trattarli come testo. Da valutare se sanificare la
-  query nel tool `cerca_normativa` o documentare il comportamento; misurare sul corpus reale.
-- `info_corpus` riporta la data dell'ultima indicizzazione dal mtime dell'indice; la data e il
-  commit dell'ultimo aggiornamento del corpus arriveranno con lo `state.json` di Fase 3.
+- Semantica della ricerca: `to_match_query` unisce i token in OR e lascia il ranking a BM25; da
+  misurare sul corpus reale se per query lunghe convenga una soglia di copertura dei termini o un
+  AND parziale, per non diluire la precisione.
+- Trasparenza per l'utente non tecnico: il `git submodule add` iniziale resta un passo del
+  manutentore (non automatizzabile senza una git write); valutare se distribuire un indice
+  pre-costruito per saltare il bootstrap pesante al primo uso.
 
 ## Riconciliazione
 
-Ultima verifica: 2026-06-30. Fase 1 committata in `6111cd3`; i `last-verified-commit` delle schede
-sono stati ri-ancorati da `1e4c79b` a `6111cd3`. Il codice della Fase 2 (server MCP + `get_act` /
-`corpus_stats`) è scritto e testato su fixture ma non ancora committato: il contenuto di queste
-schede è quindi avanti rispetto a `6111cd3` finché non si committa e si rilancia `sync-context`
-per ri-ancorare al nuovo HEAD.
+Ultima verifica: 2026-06-30. Fase 2 committata in `f954aaa`. Sopra di essa è stato scritto, e non
+ancora committato, il resto dello sviluppo del prodotto: hardening della ricerca, Fase 3
+(package `update` + `update_corpus.py`), packaging (`.mcp.json`, `setup.py`, prompt) e disclaimer
+(`prompts/consulente-legale.md`). Il contenuto di queste schede è quindi avanti rispetto a
+`f954aaa`: dopo il commit, rilanciare `sync-context` per ri-ancorare al nuovo HEAD.

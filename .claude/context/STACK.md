@@ -6,7 +6,7 @@ covers-paths:
   - src/legal_consultant/**
   - scripts/**
   - pyproject.toml
-last-verified-commit: 6111cd3
+last-verified-commit: f954aaa
 ---
 
 # Stack applicativo
@@ -44,10 +44,22 @@ filtro per singolo articolo) e `corpus_stats` (conteggio atti distinti e chunk).
 `scripts/bootstrap_index.py` percorre il corpus, parsa ogni atto e popola l'indice da zero.
 `mcp_server.py` è il server MCP "legge-it": costruisce un `FastMCP` e registra i tre tool
 `cerca_normativa` (sopra `fts.search`), `leggi_atto` (sopra `fts.get_act`) e `info_corpus` (sopra
-`fts.corpus_stats`), avviandolo su transport stdio per Claude Desktop. La logica dati resta in
-`index.fts`; il server è uno strato sottile di wiring più helper puri di formattazione
-(`_hit_to_dict`, `_citazione`), così i tool sono verificabili sull'indice di fixture senza il
-transport. Ogni tool degrada con grazia quando l'indice non esiste, rimandando al bootstrap.
+`fts.corpus_stats` più la freschezza del corpus), e il prompt `consulenza_legale` con le istruzioni
+e il disclaimer; gira su transport stdio. La logica dati resta in `index.fts`; il server è uno
+strato sottile di wiring più helper puri di formattazione (`_hit_to_dict`, `_citazione`), così i
+tool sono verificabili sull'indice di fixture senza il transport. Ogni tool degrada con grazia
+quando l'indice non esiste, rimandando al bootstrap. La ricerca è robusta a input libero: `search`
+passa la query per `fts.to_match_query`, che estrae i soli token e li cita come termini letterali
+in OR, così un testo non tecnico non può produrre una query MATCH invalida.
+
+Il package `update` gestisce l'aggiornamento incrementale (Fase 3): `corpus_revision` legge commit
+e data dell'HEAD del corpus, `pull` fa il fast-forward del submodule, `changed_files` calcola via
+`git diff` i `.md` aggiunti/modificati/cancellati fra due revisioni, `reindex_paths` ritocca
+nell'indice i soli atti cambiati (upsert per path), e `read_state`/`write_state` persistono lo
+stato in `data/index/state.json` (commit, data, conteggi, timestamp del reindex). `scripts/setup.py`
+è il setup a un comando per l'utente finale (init submodule shallow, `uv sync`, bootstrap);
+`scripts/update_corpus.py` è l'aggiornamento schedulabile. La registrazione in Claude Code è
+versionata in `.mcp.json` in radice; per Claude Desktop si usa la voce in `deployment.md`.
 
 ## Riferimenti a snippet
 
@@ -56,11 +68,17 @@ src/legal_consultant/ingest/parser.py:parse_act        parsing atto → metadati
 src/legal_consultant/ingest/parser.py:_split_chunks    chunking per articolo
 src/legal_consultant/ingest/parser.py:_ARTICLE_RE      regex intestazione "## Art. N."
 src/legal_consultant/index/fts.py:_DDL                 schema FTS5 (tokenizer, colonne)
-src/legal_consultant/index/fts.py:search               ricerca BM25 + filtro vigenti
+src/legal_consultant/index/fts.py:search               ricerca BM25 + filtro vigenti + sanitize
+src/legal_consultant/index/fts.py:to_match_query       testo libero → query MATCH sicura
 src/legal_consultant/index/fts.py:get_act              chunk di un atto per urn/path (+ articolo)
 src/legal_consultant/index/fts.py:corpus_stats         conteggio atti e chunk indicizzati
 scripts/bootstrap_index.py:main                        prima indicizzazione completa
 src/legal_consultant/mcp_server.py:cerca_normativa     tool MCP: ricerca BM25 → estratti citabili
 src/legal_consultant/mcp_server.py:leggi_atto          tool MCP: testo integrale atto/articolo
-src/legal_consultant/mcp_server.py:info_corpus         tool MCP: stato dell'indice
+src/legal_consultant/mcp_server.py:info_corpus         tool MCP: stato e freschezza + disclaimer
+src/legal_consultant/mcp_server.py:consulenza_legale   prompt MCP: istruzioni + disclaimer
+src/legal_consultant/update/__init__.py:reindex_paths  reindicizzazione incrementale per path
+src/legal_consultant/update/__init__.py:changed_files  git diff → atti cambiati/cancellati
+scripts/update_corpus.py:main                          pull + reindex incrementale (schedulabile)
+scripts/setup.py:main                                  setup a un comando per l'utente finale
 ```

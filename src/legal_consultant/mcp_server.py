@@ -18,10 +18,18 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from .config import INDEX_PATH
+from . import update
+from .config import CORPUS_PATH, INDEX_PATH, STATE_PATH
 from .index import fts
 
 mcp = FastMCP("legge-it")
+
+DISCLAIMER = (
+    "Questo strumento fornisce estratti della legislazione italiana a scopo "
+    "informativo e non costituisce consulenza legale. Verifica sempre il testo "
+    "vigente sulle fonti ufficiali (Gazzetta Ufficiale, Normattiva) e, per decisioni "
+    "concrete, rivolgiti a un professionista abilitato."
+)
 
 
 # --- Helper puri (testabili senza il transport MCP) -------------------------
@@ -120,9 +128,10 @@ def leggi_atto(urn: str = "", path: str = "", articolo: str = "") -> dict:
 
 @mcp.tool()
 def info_corpus() -> dict:
-    """Stato del corpus indicizzato: numero di atti e di chunk, e data dell'ultima
-    indicizzazione. Usalo per dire all'utente quanto e' aggiornata e ampia la base
-    normativa su cui si fonda la risposta.
+    """Stato e freschezza del corpus indicizzato: numero di atti e di chunk, commit e
+    data dell'ultimo aggiornamento del corpus. Usalo per dire all'utente quanto e'
+    aggiornata e ampia la base normativa su cui si fonda la risposta, e cita sempre il
+    disclaimer in calce.
     """
     if not INDEX_PATH.exists():
         return _index_missing_msg()
@@ -131,14 +140,51 @@ def info_corpus() -> dict:
         n_atti, n_chunks = fts.corpus_stats(conn)
     finally:
         conn.close()
-    mtime = datetime.fromtimestamp(Path(INDEX_PATH).stat().st_mtime, tz=timezone.utc)
-    return {
+
+    info: dict = {
         "atti_indicizzati": n_atti,
         "chunk_indicizzati": n_chunks,
-        "ultima_indicizzazione_utc": mtime.isoformat(timespec="seconds"),
         "indice": str(INDEX_PATH),
-        "nota": "Aggiornamento incrementale schedulato: previsto in Fase 3 (non ancora attivo).",
     }
+    state = update.read_state(STATE_PATH)
+    if state:
+        info["corpus_commit"] = state.get("corpus_commit")
+        info["corpus_aggiornato_il"] = state.get("corpus_date")
+        info["ultimo_reindex_utc"] = state.get("reindicizzato_il")
+        info["fonte_freschezza"] = "state.json (aggiornamento incrementale)"
+    else:
+        commit, date = update.corpus_revision(CORPUS_PATH)
+        if commit:
+            info["corpus_commit"] = commit
+            info["corpus_aggiornato_il"] = date
+            info["fonte_freschezza"] = "git del submodule corpus"
+        mtime = datetime.fromtimestamp(Path(INDEX_PATH).stat().st_mtime, tz=timezone.utc)
+        info["ultima_indicizzazione_utc"] = mtime.isoformat(timespec="seconds")
+        info.setdefault(
+            "fonte_freschezza",
+            "mtime dell'indice (aggiornamento incrementale non ancora eseguito)",
+        )
+    info["nota_legale"] = DISCLAIMER
+    return info
+
+
+@mcp.prompt()
+def consulenza_legale() -> str:
+    """Istruzioni operative per usare il consulente legale: come interrogare i tool e
+    come citare le fonti, con il disclaimer. Pensato per essere caricato dal client
+    all'inizio di una conversazione."""
+    return (
+        "Sei un consulente legale che risponde sul diritto italiano basandosi solo sul "
+        "corpus normativo locale, mai a memoria. Procedi cosi':\n"
+        "1. Per ogni domanda di diritto chiama prima `cerca_normativa` con i concetti "
+        "rilevanti; se servono i dettagli leggi il testo con `leggi_atto`.\n"
+        "2. Rispondi solo sulla base degli estratti restituiti. Cita sempre atto e "
+        "articolo con il loro URN. Se l'informazione non e' nel corpus, dichiaralo "
+        "invece di ipotizzare.\n"
+        "3. Usa `info_corpus` per dire quanto e' aggiornata la base normativa quando "
+        "la freschezza e' rilevante.\n"
+        f"4. Chiudi sempre con il disclaimer: {DISCLAIMER}"
+    )
 
 
 def main() -> None:

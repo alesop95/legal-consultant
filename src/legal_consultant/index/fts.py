@@ -8,10 +8,28 @@ fa cancellando le righe con quel `path` e reinserendole.
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from pathlib import Path
 
 from ..ingest.parser import ParsedAct
+
+# Token alfanumerici unicode: lettere accentate e cifre incluse, punteggiatura esclusa.
+_TOKEN_RE = re.compile(r"\w+", re.UNICODE)
+
+
+def to_match_query(text: str) -> str:
+    """Trasforma testo libero in una query FTS5 sicura.
+
+    Estrae i soli token alfanumerici (unicode), li cita come termini letterali e li
+    unisce in OR: qualunque input dell'utente viene trattato come parole da cercare e
+    mai come sintassi MATCH (virgolette, `*`, `NEAR`, parentesi), che altrimenti
+    solleverebbe un errore SQL su testo malformato. Il ranking BM25 promuove comunque
+    i chunk che contengono piu' termini. Restituisce stringa vuota se non c'e' alcun
+    token: il chiamante interpreta l'assenza di token come "nessun risultato".
+    """
+    tokens = _TOKEN_RE.findall(text or "")
+    return " OR ".join(f'"{t}"' for t in tokens)
 
 _DDL = """
 CREATE VIRTUAL TABLE IF NOT EXISTS chunks USING fts5(
@@ -81,15 +99,25 @@ def search(
     query: str,
     limit: int = 8,
     solo_vigenti: bool = True,
+    sanitize: bool = True,
 ) -> list[sqlite3.Row]:
-    """Ricerca BM25. `query` usa la sintassi MATCH di FTS5 (testo libero ammesso)."""
+    """Ricerca BM25 su testo libero.
+
+    Con `sanitize=True` (default) la `query` passa per `to_match_query`, che la rende
+    una espressione MATCH sempre valida; con `sanitize=False` la `query` e' usata cosi'
+    com'e' (sintassi MATCH di FTS5 a carico del chiamante). Se dopo la sanificazione non
+    resta alcun token, ritorna lista vuota senza interrogare il database.
+    """
+    match = to_match_query(query) if sanitize else query
+    if not match:
+        return []
     sql = [
         "SELECT urn, tipo, numero, data, titolo, collezione, articolo, rubrica, vigente, path,",
         f"       snippet(chunks, {_COL_TESTO}, '[', ']', ' … ', 16) AS estratto,",
         "       bm25(chunks) AS score",
         "FROM chunks WHERE chunks MATCH ?",
     ]
-    params: list[object] = [query]
+    params: list[object] = [match]
     if solo_vigenti:
         sql.append("AND vigente = 'true'")
     sql.append("ORDER BY score LIMIT ?")
