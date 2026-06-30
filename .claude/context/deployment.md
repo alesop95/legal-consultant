@@ -26,7 +26,10 @@ consuma i tool; la chat passa per l'abbonamento Team, il resto non lascia la mac
 ## Comandi
 
 Setup a un comando per l'utente finale, dopo aver clonato il repo: `uv run python scripts/setup.py`
-inizializza il submodule del corpus in shallow, sincronizza l'ambiente e costruisce l'indice.
+inizializza il submodule del corpus in shallow, sincronizza l'ambiente e costruisce l'indice. Su
+Windows gestisce da sé i nomi-file lunghi del corpus (oltre 260 caratteri): inizializza il
+submodule con `core.longpaths=true` e lo persiste nel clone, senza chiedere privilegi di
+amministratore né modifiche al registro.
 L'aggiunta iniziale del submodule (`git submodule add`) resta un passo manuale del manutentore,
 eseguito una volta, perché modifica `.gitmodules`. I singoli passi a mano: `uv sync --extra dev`
 per ambiente e strumenti di test; `uv run python scripts/bootstrap_index.py` per ricostruire

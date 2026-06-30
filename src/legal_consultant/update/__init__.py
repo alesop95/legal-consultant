@@ -10,10 +10,12 @@ fixture (`reindex_paths`, lettura/scrittura dello stato), e interazione con git
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
+from ..config import long_path
 from ..index import fts
 from ..ingest.parser import parse_act
 
@@ -85,7 +87,7 @@ def reindex_paths(
     for rel in changed:
         f = corpus_root / rel
         fts.delete_path(conn, rel)
-        if not f.is_file():
+        if not os.path.isfile(long_path(f)):
             continue
         n_chunks += fts.insert_act(conn, parse_act(f, corpus_root))
     conn.commit()

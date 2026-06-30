@@ -6,9 +6,30 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-30 — Corpus reale indicizzato end-to-end + percorsi lunghi Windows + fix vigenti/dedup
+
+Commit: (codice non ancora committato; indice e corpus sono fuori da git)
+File toccati: `src/legal_consultant/config.py` (+ `long_path`); `src/legal_consultant/ingest/parser.py`
+(open via `long_path`; `vigente` declassato a False per la collezione delle abrogate);
+`src/legal_consultant/index/fts.py` (+ `dedup` per (urn, articolo) in `search`);
+`src/legal_consultant/update/__init__.py` (`is_file` via `long_path`); `scripts/setup.py`
+(`core.longpaths` automatico); schede `STACK.md`, `deployment.md`, `design-and-security.md`.
+Motivo: portato il sistema su tutto il corpus reale, end-to-end, su Windows. Limite MAX_PATH (260
+char) aggirato in modo trasparente, senza admin: git estrae con `core.longpaths`, Python apre con
+prefisso `\\?\` via `config.long_path` (verificato leggendo un atto con path da 276 char). Riusati i
+330 MB gia' scaricati: `git -C data/italia-corpus reset --hard` ha completato l'estrazione (287.813
+file). `bootstrap_index.py` sull'intero corpus: 287.811 atti, 759.881 chunk, 23 errori (caratteri di
+controllo, loggati), 744s, indice 2.4 GB. Due problemi di qualita' emersi dal test reale e corretti:
+nel corpus il campo `vigente` e' True anche per le abrogate, quindi si declassa l'intera collezione
+"Atti normativi abrogati (in originale)" (123.828 atti esclusi dai vigenti, restano 163.957);
+deduplica per atto+articolo perche' il corpus archivia alcuni atti in piu' collezioni. `uv run
+pytest` → 9 verdi; smoke dei tool MCP sull'indice reale corretto (es. "licenziamento per giusta
+causa" → D.Lgs. 23/2015 art. 3). Limite noto: "vigente" qui significa "non nella collezione delle
+abrogate", non "in vigore oggi" su Normattiva; ranking BM25 su query concettuali variabile (ADR-003).
+
 ## 2026-06-30 — Hardening, Fase 3, packaging trasparente e disclaimer (su fixture)
 
-Commit: (non ancora committato)
+Commit: bd19b1d
 File toccati: `src/legal_consultant/index/fts.py` (+ `to_match_query`, `search` con `sanitize`);
 `src/legal_consultant/update/__init__.py` (nuovo: `corpus_revision`, `pull`, `changed_files`,
 `reindex_paths`, `read_state`/`write_state`); `src/legal_consultant/mcp_server.py` (`info_corpus`

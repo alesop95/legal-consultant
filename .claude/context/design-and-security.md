@@ -47,6 +47,16 @@ client, e la freschezza in `info_corpus` è best-effort: se git o il submodule m
 una fonte meno precisa senza fallire. Il package `update` esegue git come sottoprocesso solo sul
 percorso del corpus configurato, con `pull --ff-only` per non riscrivere mai la storia.
 
+Portabilità su Windows: il corpus italiano ha nomi di file molto lunghi, che sul filesystem
+sforano il limite storico di 260 caratteri (MAX_PATH). Il prodotto lo aggira in modo trasparente,
+senza chiedere all'utente privilegi di amministratore né modifiche al registro di sistema, su due
+fronti. Lato git, l'estrazione dei file usa `core.longpaths=true` (impostato dal `setup.py` con
+`-c` e persistito nel clone del corpus), che fa scrivere a git i path lunghi tramite le API estese.
+Lato Python, `config.long_path` antepone il prefisso `\\?\` quando si apre o si interroga un file
+del corpus, così `open` e `os.stat` superano lo stesso limite. È una scelta di design al servizio
+della trasparenza per l'utente finale: il setup è un comando solo e funziona su una macchina
+Windows non amministrata.
+
 ## Diagrammi
 
 | Diagramma | Sorgente | Componenti rappresentati |

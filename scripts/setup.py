@@ -40,7 +40,12 @@ def main() -> int:
     if _corpus_presente(corpus):
         print(f"Corpus gia' presente in {corpus}, salto il download.")
     elif gitmodules.is_file():
-        _run(["git", "submodule", "update", "--init", "--depth", "1", "data/italia-corpus"])
+        # -c core.longpaths=true: i nomi-file lunghi del corpus superano il limite di
+        # 260 caratteri di Windows; questo fa usare a git le API estese, senza admin.
+        _run(["git", "-c", "core.longpaths=true", "submodule", "update",
+              "--init", "--depth", "1", "data/italia-corpus"])
+        # Persiste l'impostazione nel clone, così anche i pull futuri estraggono i path lunghi.
+        _run(["git", "-C", "data/italia-corpus", "config", "core.longpaths", "true"])
     else:
         print(
             "Corpus non configurato come submodule (.gitmodules assente). Il manutentore "

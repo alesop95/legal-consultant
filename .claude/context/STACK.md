@@ -34,7 +34,11 @@ insufficiente. Diritto UE (EUR-Lex) fuori ambito (ADR-004).
 ## Flussi di codice e ruolo architetturale dei file
 
 `config.py` risolve i percorsi locali (CORPUS_PATH, INDEX_PATH, STATE_PATH) da ambiente/.env con
-default relativi alla radice. `ingest/parser.py` legge un atto `.md`: separa il frontmatter YAML
+default relativi alla radice, ed espone `long_path`, che su Windows antepone il prefisso
+extended-length `\\?\` ai path assoluti: il corpus italiano ha nomi di file che superano il limite
+di 260 caratteri (MAX_PATH) e senza questo accorgimento non sarebbero leggibili: l'helper aggira il
+limite senza modifiche al registro né privilegi di amministratore. `ingest/parser.py` lo usa per
+aprire ogni atto. `ingest/parser.py` legge un atto `.md`: separa il frontmatter YAML
 (metadati dell'atto) e spezza il corpo in chunk a granularità di articolo, riconoscendo le
 intestazioni `## Art. N.` con rubrica opzionale; produce `ParsedAct(act, chunks)`. `index/fts.py`
 costruisce e interroga la tabella virtuale FTS5 `chunks` (colonne testuali indicizzate, metadati

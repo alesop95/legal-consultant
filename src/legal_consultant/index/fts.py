@@ -100,6 +100,7 @@ def search(
     limit: int = 8,
     solo_vigenti: bool = True,
     sanitize: bool = True,
+    dedup: bool = True,
 ) -> list[sqlite3.Row]:
     """Ricerca BM25 su testo libero.
 
@@ -107,6 +108,11 @@ def search(
     una espressione MATCH sempre valida; con `sanitize=False` la `query` e' usata cosi'
     com'e' (sintassi MATCH di FTS5 a carico del chiamante). Se dopo la sanificazione non
     resta alcun token, ritorna lista vuota senza interrogare il database.
+
+    Con `dedup=True` (default) i risultati sono deduplicati per (urn, articolo) tenendo
+    il primo, cioe' il meglio classificato: il corpus archivia alcuni atti in piu'
+    collezioni e senza deduplica lo stesso articolo comparirebbe piu' volte. Per ottenere
+    `limit` risultati distinti si sovra-campiona la query sottostante.
     """
     match = to_match_query(query) if sanitize else query
     if not match:
@@ -121,8 +127,23 @@ def search(
     if solo_vigenti:
         sql.append("AND vigente = 'true'")
     sql.append("ORDER BY score LIMIT ?")
-    params.append(limit)
-    return conn.execute("\n".join(sql), params).fetchall()
+    # Sovra-campionamento per recuperare abbastanza righe da deduplicare fino a `limit`.
+    params.append(limit * 5 if dedup else limit)
+    rows = conn.execute("\n".join(sql), params).fetchall()
+    if not dedup:
+        return rows
+
+    seen: set[tuple[str, str]] = set()
+    out: list[sqlite3.Row] = []
+    for r in rows:
+        key = (r["urn"], r["articolo"] or "")
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(r)
+        if len(out) >= limit:
+            break
+    return out
 
 
 def get_act(

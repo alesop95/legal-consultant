@@ -27,20 +27,28 @@ non si committa e si rilancia `sync-context`.
 | current-work.md | f954aaa | aggiornata (prodotto completo su fixture); avanti |
 | roadmap.md | f954aaa | aggiornata (Fase 3 e packaging fatti a codice); avanti |
 
+## Stato del corpus e dell'indice
+
+Corpus reale clonato in `data/italia-corpus` (287.813 file, fuori da git: clone non ancora
+registrato come submodule). Indice FTS5 reale in `data/index/legge.sqlite` (2.4 GB, gitignored):
+287.785 atti, 759.881 chunk; 163.957 atti vigenti dopo l'esclusione della collezione delle
+abrogate. Server MCP verificato sull'indice reale. Limite di Windows sui path lunghi gestito dal
+codice (`config.long_path`) e da `core.longpaths`, senza admin.
+
 ## Punto di ripresa
 
-Fase 1 committata in `6111cd3`. Fase 2 committata in `f954aaa` (server MCP "legge-it"). Sopra di
-essa, scritto e testato su fixture ma **non ancora committato**, il resto dello sviluppo del
-prodotto: hardening della ricerca (`fts.to_match_query` + `search` sanitize), Fase 3 (package
-`update` + `scripts/update_corpus.py`), packaging trasparente (`.mcp.json` per Claude Code,
-`scripts/setup.py`, prompt MCP), disclaimer e istruzioni (`prompts/consulente-legale.md` + prompt
-`consulenza_legale`). Suite a 9 test verdi (`uv run pytest`); smoke di tool e prompt ok; stdio
-pulito.
+Fase 1 in `6111cd3`, Fase 2 in `f954aaa`, hardening/Fase 3/packaging/disclaimer in `bd19b1d`.
+Non ancora committato (questa sessione): gestione percorsi lunghi Windows (`config.long_path`,
+`setup.py` con `core.longpaths`), declassamento delle abrogate a non vigenti nel parser, deduplica
+in `search`, più aggiornamenti delle schede. Il corpus reale è clonato e l'indice completo è
+costruito (vedi sezione sopra); server MCP verificato sull'indice reale; 9 test verdi.
 
-Prossime azioni concrete, in ordine. Primo: committare lo sviluppo qui sopra (codice + schede), poi
-rilanciare `sync-context` per ri-ancorare a HEAD. Secondo: aggiungere il corpus come **submodule
-shallow** — passo manuale del manutentore, `git submodule add --depth 1
-https://github.com/ahmeabd/italia-corpus.git data/italia-corpus` — e lanciare `uv run python
-scripts/setup.py` (o `bootstrap_index.py`) per la prima indicizzazione completa (clone pesante,
-~831 MB, preferire shallow). Terzo: verifica end-to-end in Claude Code (`.mcp.json`) e Claude
-Desktop, poi i casi d'uso specifici di test concordati con l'utente.
+Prossime azioni concrete, in ordine. Primo: committare il codice di questa sessione (percorsi
+lunghi, vigenti, dedup) e le schede, escludendo `data/`, poi rilanciare `sync-context`. Secondo
+(productizzazione): registrare il corpus come submodule per la riproducibilità del clone — il
+clone esistente in `data/italia-corpus` è funzionante ma non registrato; `git submodule add` va
+fatto con `-c core.longpaths=true`. Terzo: usare il consulente da chat — aprire il progetto in una
+nuova sessione di Claude Code e approvare il server di `.mcp.json`, oppure registrarlo in Claude
+Desktop, poi i casi d'uso concordati con l'utente. Limite noto da comunicare: "vigente" qui esclude
+solo la collezione delle abrogate, non garantisce la vigenza odierna su Normattiva (vale il
+disclaimer); ranking BM25 su query concettuali da valutare (ADR-003, eventuale ibrido).

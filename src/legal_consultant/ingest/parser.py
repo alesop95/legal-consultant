@@ -15,6 +15,8 @@ from pathlib import Path
 
 import frontmatter
 
+from ..config import long_path
+
 # Intestazione di articolo, es:
 #   "## Art. 1."
 #   "## Art. 1. — Approvazione del codice e delle disposizioni connesse"
@@ -22,6 +24,12 @@ import frontmatter
 _ARTICLE_RE = re.compile(
     r"^##\s+Art\.?\s*(?P<num>[\w\-]+(?:\s+\w+)?)\.?(?:\s*[—–-]\s*(?P<rubrica>.+))?\s*$"
 )
+
+# Collezione del corpus che raccoglie le leggi abrogate. Nel frontmatter di italia-corpus
+# il campo `vigente` risulta True anche per questi atti, quindi non è affidabile per
+# escluderli: l'appartenenza a questa collezione è il segnale corretto, e qui declassa
+# l'atto a non vigente.
+_ABROGATI_COLLECTION = "Atti normativi abrogati (in originale)"
 
 
 @dataclass
@@ -56,10 +64,14 @@ class ParsedAct:
 
 def parse_act(file_path: Path, corpus_root: Path) -> ParsedAct:
     """Parsa un file .md del corpus in metadati + chunk per articolo."""
-    post = frontmatter.load(str(file_path))
+    post = frontmatter.load(long_path(file_path))
     meta = post.metadata
     rel = file_path.resolve().relative_to(corpus_root.resolve()).as_posix()
     collezione = rel.split("/", 1)[0]
+
+    # `vigente` dal frontmatter, ma declassato a False per gli atti della collezione delle
+    # abrogate (vedi nota su _ABROGATI_COLLECTION).
+    vigente = bool(meta.get("vigente", False)) and collezione != _ABROGATI_COLLECTION
 
     act = Act(
         tipo=str(meta.get("tipo", "")).strip(),
@@ -68,7 +80,7 @@ def parse_act(file_path: Path, corpus_root: Path) -> ParsedAct:
         titolo=str(meta.get("titolo", "")).strip(),
         urn=str(meta.get("urn", "")).strip(),
         codice_redazionale=str(meta.get("codice_redazionale", "")).strip(),
-        vigente=bool(meta.get("vigente", False)),
+        vigente=vigente,
         collezione=collezione,
         path=rel,
     )

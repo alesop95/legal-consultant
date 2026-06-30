@@ -14,6 +14,21 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def long_path(p: str | Path) -> str:
+    """Percorso assoluto in forma adatta all'I/O su file.
+
+    Su Windows antepone il prefisso extended-length `\\\\?\\` al path assoluto, così
+    `open()` e `os.stat` superano il limite storico dei 260 caratteri (MAX_PATH) senza
+    richiedere modifiche al registro di sistema né privilegi di amministratore: il
+    corpus italiano ha nomi di file molto lunghi che altrimenti non sarebbero leggibili
+    su Windows. Su sistemi POSIX restituisce il path risolto invariato.
+    """
+    s = str(Path(p).resolve())
+    if os.name == "nt" and not s.startswith("\\\\?\\"):
+        return "\\\\?\\" + s
+    return s
+
+
 def _load_dotenv(path: Path) -> None:
     """Carica chiavi KEY=VALUE da un .env, senza dipendenze esterne.
 

@@ -53,27 +53,33 @@ Definition of done:
 - [x] packaging: `.mcp.json` (Claude Code) + `scripts/setup.py` (setup a un comando) + prompt MCP
 - [x] disclaimer e istruzioni: `prompts/consulente-legale.md` e prompt `consulenza_legale`
 - [x] test verdi (9 totali) e smoke dei tre tool + prompt su fixture
-- [ ] `git submodule add` del corpus (passo manuale del manutentore) e prima indicizzazione completa
-- [ ] verifica end-to-end in Claude Code e Claude Desktop sul corpus reale
-- [ ] Project "Consulente Legale" in Claude Desktop con le istruzioni di `prompts/consulente-legale.md`
+- [x] percorsi lunghi Windows aggirati senza admin (`config.long_path` + `core.longpaths`)
+- [x] corpus reale clonato (287.813 file) e indicizzato (287.785 atti, 759.881 chunk, indice 2.4 GB)
+- [x] abrogate declassate a non vigenti (collezione) e deduplica per atto+articolo nella ricerca
+- [x] verifica server MCP sull'indice reale (es. "licenziamento per giusta causa" → D.Lgs. 23/2015)
+- [ ] registrare il corpus come submodule per la riproducibilità del clone (productizzazione)
+- [ ] uso end-to-end da chat: Claude Code (approvare `.mcp.json`) e/o Project Claude Desktop
+- [ ] casi d'uso specifici concordati con l'utente sul corpus reale
 
-Stato: sviluppo del prodotto completato e verificato su indice di fixture (9 test verdi + smoke di
-tool e prompt). Restano i passi che richiedono il corpus reale: l'aggiunta del submodule e la prima
-indicizzazione, poi la verifica end-to-end nei due client e i casi d'uso specifici.
+Stato: prodotto completo e funzionante end-to-end sul corpus reale. La ricerca, la lettura e lo
+stato girano sull'indice da 2.4 GB; il server MCP è verificato sui dati veri. Restano la
+registrazione del submodule per la riproducibilità e l'uso conversazionale da un client.
 
 Domande aperte:
 
-- Semantica della ricerca: `to_match_query` unisce i token in OR e lascia il ranking a BM25; da
-  misurare sul corpus reale se per query lunghe convenga una soglia di copertura dei termini o un
-  AND parziale, per non diluire la precisione.
-- Trasparenza per l'utente non tecnico: il `git submodule add` iniziale resta un passo del
-  manutentore (non automatizzabile senza una git write); valutare se distribuire un indice
-  pre-costruito per saltare il bootstrap pesante al primo uso.
+- Semantica di "vigente": nel corpus il campo `vigente` è True anche per le abrogate, quindi il
+  filtro esclude solo la collezione "Atti normativi abrogati (in originale)". Non garantisce la
+  vigenza odierna di un atto su Normattiva: vale il disclaimer. Da valutare un segnale di vigenza
+  più fine se disponibile nel corpus.
+- Ranking BM25 su query concettuali: variabile (a volte l'articolo centrale di un codice non emerge
+  in cima). Misurare e, se il recall non basta, valutare l'ibrido dense+sparse (ADR-003).
+- Trasparenza: il `git submodule add` iniziale resta un passo del manutentore; valutare la
+  distribuzione di un indice pre-costruito per saltare il bootstrap pesante al primo uso.
 
 ## Riconciliazione
 
-Ultima verifica: 2026-06-30. Fase 2 committata in `f954aaa`. Sopra di essa è stato scritto, e non
-ancora committato, il resto dello sviluppo del prodotto: hardening della ricerca, Fase 3
-(package `update` + `update_corpus.py`), packaging (`.mcp.json`, `setup.py`, prompt) e disclaimer
-(`prompts/consulente-legale.md`). Il contenuto di queste schede è quindi avanti rispetto a
-`f954aaa`: dopo il commit, rilanciare `sync-context` per ri-ancorare al nuovo HEAD.
+Ultima verifica: 2026-06-30. Hardening, Fase 3, packaging e disclaimer committati in `bd19b1d`.
+Non ancora committato: gestione percorsi lunghi Windows (`config.long_path`, `setup.py`),
+declassamento delle abrogate nel parser e deduplica in `search`, più queste schede. Il corpus
+reale è clonato e l'indice completo costruito; il server è verificato sui dati veri. Dopo il
+commit di questo lotto, rilanciare `sync-context` per ri-ancorare al nuovo HEAD.
