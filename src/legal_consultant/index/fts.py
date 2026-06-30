@@ -84,7 +84,7 @@ def search(
 ) -> list[sqlite3.Row]:
     """Ricerca BM25. `query` usa la sintassi MATCH di FTS5 (testo libero ammesso)."""
     sql = [
-        "SELECT urn, tipo, numero, data, titolo, collezione, articolo, rubrica, path,",
+        "SELECT urn, tipo, numero, data, titolo, collezione, articolo, rubrica, vigente, path,",
         f"       snippet(chunks, {_COL_TESTO}, '[', ']', ' … ', 16) AS estratto,",
         "       bm25(chunks) AS score",
         "FROM chunks WHERE chunks MATCH ?",
@@ -95,3 +95,35 @@ def search(
     sql.append("ORDER BY score LIMIT ?")
     params.append(limit)
     return conn.execute("\n".join(sql), params).fetchall()
+
+
+def get_act(
+    conn: sqlite3.Connection,
+    urn: str | None = None,
+    path: str | None = None,
+    articolo: str | None = None,
+) -> list[sqlite3.Row]:
+    """Restituisce i chunk di un atto, identificato per `urn` o `path`, in ordine di
+    inserimento (preambolo e poi articoli). Con `articolo` filtra il singolo articolo.
+    Ritorna lista vuota se l'atto (o l'articolo) non esiste nell'indice.
+    """
+    if not urn and not path:
+        raise ValueError("get_act richiede urn oppure path")
+    sql = [
+        "SELECT urn, tipo, numero, data, titolo, collezione, articolo, rubrica, vigente, path, testo",
+        "FROM chunks WHERE",
+        "urn = ?" if urn else "path = ?",
+    ]
+    params: list[object] = [urn or path]
+    if articolo is not None:
+        sql.append("AND articolo = ?")
+        params.append(articolo)
+    sql.append("ORDER BY rowid")
+    return conn.execute("\n".join(sql), params).fetchall()
+
+
+def corpus_stats(conn: sqlite3.Connection) -> tuple[int, int]:
+    """Conteggi dell'indice: numero di atti distinti (per path file) e numero di chunk."""
+    n_atti = conn.execute("SELECT COUNT(DISTINCT path) FROM chunks").fetchone()[0]
+    n_chunks = conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+    return int(n_atti), int(n_chunks)

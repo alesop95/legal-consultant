@@ -5,6 +5,7 @@ description = "Consulente legale locale (server MCP) sul corpus della legislazio
 requires-python = ">=3.11"
 dependencies = [
     "python-frontmatter>=1.1",
+    "mcp>=1.2",
 ]
 
 [project.optional-dependencies]

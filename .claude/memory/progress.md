@@ -6,9 +6,26 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
-## 2026-06-25 — Fase 1: pipeline ingest + indice FTS5 (su fixture)
+## 2026-06-30 — Fase 2: server MCP "legge-it" (su fixture)
 
 Commit: (non ancora committato)
+File toccati: `src/legal_consultant/mcp_server.py` (nuovo); `src/legal_consultant/index/fts.py`
+(+ `get_act`, + `corpus_stats`; `search` ora include `vigente` nel SELECT); `pyproject.toml`
+(+ dipendenza `mcp>=1.2`); `uv.lock`; `tests/test_pipeline.py` (+ test `get_act` e `corpus_stats`).
+Aggiornate e ri-ancorate a `6111cd3` le schede `STACK.md`, `current-work.md`, `deployment.md`,
+`design-and-security.md`, `dev-testing.md`, `roadmap.md`; aggiornati `memory/index.md` e questo
+work-log.
+Motivo: implementata la Fase 2. Server `FastMCP("legge-it")` su transport stdio con tre tool —
+`cerca_normativa` (sopra `fts.search`), `leggi_atto` (sopra `fts.get_act`), `info_corpus` (sopra
+`fts.corpus_stats`) — con descrizioni orientate alla citazione e degrado con grazia se l'indice
+manca. Logica dati in `index.fts`, server sottile con helper puri di formattazione. `uv sync
+--extra dev` ok; `uv run pytest` → 5 test verdi; smoke dei tre tool su indice di fixture corretto;
+avvio `python -m legal_consultant.mcp_server` su stdio pulito. Corpus ancora non clonato e server
+non ancora registrato in Claude Desktop.
+
+## 2026-06-25 — Fase 1: pipeline ingest + indice FTS5 (su fixture)
+
+Commit: 6111cd3
 File toccati: `pyproject.toml`; `src/legal_consultant/` (`__init__`, `config.py`, `ingest/parser.py`,
 `index/fts.py` + `__init__`); `scripts/bootstrap_index.py`; `tests/test_pipeline.py` e
 `tests/fixtures/Codici/` (2 atti reali). Aggiornate le schede `STACK.md` e `current-work.md`.

@@ -56,3 +56,27 @@ def test_filtro_solo_vigenti():
     rows = fts.search(conn, "codice", limit=10, solo_vigenti=True)
     assert all(True for _ in rows)  # nessun errore SQL col filtro
     assert rows
+
+
+def test_get_act_per_urn_e_articolo():
+    conn = _build_index()
+    urn = "urn:nir:stato:decreto.legislativo:2016-08-26;174"
+    # Atto intero: piu chunk, in ordine di inserimento (preambolo prima degli articoli).
+    rows = fts.get_act(conn, urn=urn)
+    assert rows, "atto non trovato per urn"
+    assert all(r["urn"] == urn for r in rows)
+    assert len(rows) > 1
+    # Singolo articolo: filtro su articolo restituisce solo quel chunk.
+    art1 = fts.get_act(conn, urn=urn, articolo="1")
+    assert len(art1) == 1
+    assert art1[0]["articolo"] == "1"
+    assert "Approvazione del codice" in (art1[0]["rubrica"] or "")
+    # Atto inesistente: lista vuota, nessun errore.
+    assert fts.get_act(conn, urn="urn:nir:stato:inesistente:1900-01-01;0") == []
+
+
+def test_corpus_stats():
+    conn = _build_index()
+    n_atti, n_chunks = fts.corpus_stats(conn)
+    assert n_atti == 2  # le due fixture
+    assert n_chunks >= n_atti
