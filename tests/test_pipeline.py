@@ -8,7 +8,7 @@ import pytest
 
 from legal_consultant import update
 from legal_consultant.index import fts
-from legal_consultant.ingest.parser import parse_act
+from legal_consultant.ingest.parser import _split_chunks, parse_act
 
 FIX = Path(__file__).parent / "fixtures"
 
@@ -81,6 +81,35 @@ def test_corpus_stats():
     n_atti, n_chunks = fts.corpus_stats(conn)
     assert n_atti == 2  # le due fixture
     assert n_chunks >= n_atti
+
+
+def test_chunking_articoli_multilivello():
+    # I codici hanno il decreto di approvazione a `## Art.` e l'articolato annesso a
+    # `### Art.`, con intestazioni strutturali `## LIBRO/Capo/Sezione` da ignorare.
+    body = (
+        "## Art. 01.\n"
+        "Disposizione di approvazione.\n\n"
+        "## - LIBRO I Titolo I GIUDICE\n"
+        "### Art. 1. — Giurisdizione penale\n"
+        "Testo dell'articolo 1.\n"
+        "### Art. 2. — Cognizione del giudice\n"
+        "Testo dell'articolo 2.\n"
+        "## Capo II COMPETENZA\n"
+        "### Art. 11-bis.\n"
+        "Testo dell'articolo 11-bis.\n"
+        "### Art. 2043. (Risarcimento per fatto illecito)\n"
+        "Testo dell'articolo 2043.\n"
+    )
+    chunks = _split_chunks(body)
+    arts = [c.articolo for c in chunks if c.articolo is not None]
+    assert "01" in arts  # decreto di approvazione (livello 2)
+    assert {"1", "2", "11-bis", "2043"} <= set(arts)  # codice annesso (livello 3)
+    # le intestazioni strutturali non diventano articoli
+    assert not any("LIBRO" in a or "Capo" in a for a in arts)
+    # rubrica nelle due forme: trattino (italia-corpus) e parentesi (Normattiva)
+    by_art = {c.articolo: c for c in chunks if c.articolo is not None}
+    assert by_art["1"].rubrica == "Giurisdizione penale"
+    assert by_art["2043"].rubrica == "Risarcimento per fatto illecito"
 
 
 def test_to_match_query_sanifica():

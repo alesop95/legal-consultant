@@ -6,6 +6,27 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-30 — Integrazione codici fondamentali da Normattiva (civile, penale, ecc.)
+
+Commit: (non ancora committato)
+File toccati: `src/legal_consultant/ingest/parser.py` (regex articolo estesa: cattura rubrica
+anche tra parentesi `### Art. N. (Rubrica)` oltre che col trattino, retro-compatibile);
+`src/legal_consultant/config.py` (+ `EXTRA_CORPUS_PATH`); `scripts/fetch_codici.py` (nuovo);
+`scripts/bootstrap_index.py` (indicizza anche la collezione supplementare); `tests/test_pipeline.py`
+(+ caso rubrica tra parentesi); `data/codici-extra/Codici/*.md` (5 codici scaricati, ~5.2 MB).
+Aggiornate le schede pertinenti e `memory/index.md`.
+Motivo: chiusura della lacuna emersa dal test in Claude Desktop. I vecchi codici emanati con Regio
+Decreto (civile, penale, procedura civile, navigazione, penali militari) in italia-corpus c'erano
+solo come decreto di approvazione, senza articolato. PoC su `normattiva2md` (onData, MIT) validato:
+il codice civile scaricato da Normattiva (pubblico dominio) ha 3282 articoli, ma con rubrica tra
+parentesi che il regex non catturava (352/3282 → 3282/3282 dopo l'estensione). Scritto
+`fetch_codici.py` che scarica i 5 codici da Normattiva via `uvx normattiva2md`, ne riscrive il
+frontmatter nello schema del progetto e li salva in `data/codici-extra` (tracciato, fuori dal
+submodule). Re-index dell'intero corpus + supplemento: 287.816 atti, 966.126 chunk, 306s. Verifica
+end-to-end: art. 2043 c.c., art. 157 c.p., art. 112 c.p.c. ora presenti e ricercabili dal nostro
+indice; `cerca_normativa("risarcimento del danno per fatto illecito")` → art. 2043 c.c. `uv run
+pytest` → 10 verdi. Aggiornamento del supplemento: rilanciare `fetch_codici.py` + reindex.
+
 ## 2026-06-30 — Corpus reale indicizzato end-to-end + percorsi lunghi Windows + fix vigenti/dedup
 
 Commit: (codice non ancora committato; indice e corpus sono fuori da git)

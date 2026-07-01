@@ -25,11 +25,13 @@ Le fixture sono due atti reali sotto `tests/fixtures/Codici/` (`giustizia_contab
 `penale_approvazione.md`), scelti perché rappresentativi della struttura del corpus (frontmatter
 YAML, articoli `## Art. N.` con rubrica, preambolo). L'helper `_build_index` costruisce un indice
 FTS5 su `:memory:` parsando le fixture, e fa `skip` se il build di SQLite non ha FTS5. La suite
-copre nove casi: parsing del frontmatter e chunking, ricerca BM25 pertinente, filtro `solo_vigenti`,
-lettura di un atto per `urn` con filtro articolo (`get_act`), conteggi (`corpus_stats`),
-sanificazione della query (`to_match_query`), robustezza della ricerca su input malformato (non
-solleva), reindicizzazione incrementale (`update.reindex_paths`: cancella e reinserisce un atto) e
-round-trip dello stato (`update.read_state`/`write_state`, con `tmp_path`). I tool e il prompt del
+copre dieci casi: parsing del frontmatter e chunking, chunking multilivello dei codici (articoli a
+`## Art.` e `### Art.`, rubrica dopo trattino o tra parentesi, intestazioni strutturali ignorate),
+ricerca BM25 pertinente, filtro `solo_vigenti`, lettura di un atto per `urn` con filtro articolo
+(`get_act`), conteggi (`corpus_stats`), sanificazione della query (`to_match_query`), robustezza
+della ricerca su input malformato (non solleva), reindicizzazione incrementale
+(`update.reindex_paths`: cancella e reinserisce un atto) e round-trip dello stato
+(`update.read_state`/`write_state`, con `tmp_path`). I tool e il prompt del
 server MCP si verificano con uno smoke manuale che costruisce un indice temporaneo, punta
 `INDEX_PATH` su di esso e invoca i tre tool; non è ancora nella suite automatica. Le funzioni git
 del package `update` (`corpus_revision`, `changed_files`, `pull`) richiedono un repo reale e si

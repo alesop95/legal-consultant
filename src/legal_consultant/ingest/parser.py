@@ -17,12 +17,21 @@ import frontmatter
 
 from ..config import long_path
 
-# Intestazione di articolo, es:
+# Intestazione di articolo. Il livello di cancelletti varia nel corpus: gli atti
+# semplici e i decreti di approvazione usano `## Art. N.`, mentre l'articolato dei
+# codici annessi (es. codice di procedura penale) usa `### Art. N. — Rubrica`. Si
+# accettano quindi da 2 a 4 cancelletti. Le intestazioni strutturali dei codici
+# (`## LIBRO ...`, `## Capo ...`, `## Sezione ...`) non iniziano con "Art" e non
+# corrispondono, quindi restano testo e non creano falsi chunk.
+# La rubrica, se presente, segue il numero in due forme alternative: dopo un trattino
+# lungo (italia-corpus) o tra parentesi (Normattiva via normattiva2md). Entrambe sono
+# catturate, in gruppi distinti poi unificati.
 #   "## Art. 1."
-#   "## Art. 1. — Approvazione del codice e delle disposizioni connesse"
-#   "## Art. 2-bis."
+#   "### Art. 11-bis. — Casi di connessione"
+#   "### Art. 2043. (Risarcimento per fatto illecito)"
 _ARTICLE_RE = re.compile(
-    r"^##\s+Art\.?\s*(?P<num>[\w\-]+(?:\s+\w+)?)\.?(?:\s*[—–-]\s*(?P<rubrica>.+))?\s*$"
+    r"^#{2,4}\s+Art\.?\s*(?P<num>[\w\-]+(?:\s+\w+)?)\.?\s*"
+    r"(?:[—–-]\s*(?P<rub_dash>.+)|\((?P<rub_par>.+)\))?\s*$"
 )
 
 # Collezione del corpus che raccoglie le leggi abrogate. Nel frontmatter di italia-corpus
@@ -105,7 +114,7 @@ def _split_chunks(body: str) -> list[Chunk]:
         if m:
             flush()
             cur_articolo = m.group("num").strip()
-            rub = (m.group("rubrica") or "").strip()
+            rub = (m.group("rub_dash") or m.group("rub_par") or "").strip()
             cur_rubrica = rub or None
         else:
             buf.append(line)

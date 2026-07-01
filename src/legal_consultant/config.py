@@ -57,5 +57,9 @@ def _resolve(env_key: str, default_rel: str) -> Path:
 
 
 CORPUS_PATH = _resolve("CORPUS_PATH", "data/italia-corpus")
+# Collezione supplementare, fuori dal submodule: ospita i codici fondamentali (civile,
+# penale, ecc.) il cui articolato manca in italia-corpus, scaricati da Normattiva con
+# scripts/fetch_codici.py e indicizzati dal bootstrap insieme al corpus principale.
+EXTRA_CORPUS_PATH = _resolve("EXTRA_CORPUS_PATH", "data/codici-extra")
 INDEX_PATH = _resolve("INDEX_PATH", "data/index/legge.sqlite")
 STATE_PATH = _resolve("STATE_PATH", "data/index/state.json")

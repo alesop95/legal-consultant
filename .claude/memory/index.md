@@ -30,10 +30,12 @@ non si committa e si rilancia `sync-context`.
 ## Stato del corpus e dell'indice
 
 Corpus reale clonato in `data/italia-corpus` (287.813 file, fuori da git: clone non ancora
-registrato come submodule). Indice FTS5 reale in `data/index/legge.sqlite` (2.4 GB, gitignored):
-287.785 atti, 759.881 chunk; 163.957 atti vigenti dopo l'esclusione della collezione delle
-abrogate. Server MCP verificato sull'indice reale. Limite di Windows sui path lunghi gestito dal
-codice (`config.long_path`) e da `core.longpaths`, senza admin.
+registrato come submodule), più la collezione supplementare `data/codici-extra` (tracciata, ~5.2 MB)
+coi 5 codici fondamentali scaricati da Normattiva. Indice FTS5 in `data/index/legge.sqlite`
+(~2.6 GB, gitignored): 287.816 atti, 966.126 chunk. Server MCP verificato sull'indice reale e in
+Claude Desktop. I codici civile/penale/procedura civile (prima assenti) ora sono ricercabili
+(art. 2043 c.c., 157 c.p., 112 c.p.c.). Limite di Windows sui path lunghi gestito dal codice
+(`config.long_path`) e da `core.longpaths`, senza admin.
 
 ## Punto di ripresa
 

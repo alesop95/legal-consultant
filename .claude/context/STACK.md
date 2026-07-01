@@ -33,8 +33,8 @@ insufficiente. Diritto UE (EUR-Lex) fuori ambito (ADR-004).
 
 ## Flussi di codice e ruolo architetturale dei file
 
-`config.py` risolve i percorsi locali (CORPUS_PATH, INDEX_PATH, STATE_PATH) da ambiente/.env con
-default relativi alla radice, ed espone `long_path`, che su Windows antepone il prefisso
+`config.py` risolve i percorsi locali (CORPUS_PATH, EXTRA_CORPUS_PATH, INDEX_PATH, STATE_PATH) da
+ambiente/.env con default relativi alla radice, ed espone `long_path`, che su Windows antepone il prefisso
 extended-length `\\?\` ai path assoluti: il corpus italiano ha nomi di file che superano il limite
 di 260 caratteri (MAX_PATH) e senza questo accorgimento non sarebbero leggibili: l'helper aggira il
 limite senza modifiche al registro né privilegi di amministratore. `ingest/parser.py` lo usa per
@@ -62,7 +62,12 @@ e data dell'HEAD del corpus, `pull` fa il fast-forward del submodule, `changed_f
 nell'indice i soli atti cambiati (upsert per path), e `read_state`/`write_state` persistono lo
 stato in `data/index/state.json` (commit, data, conteggi, timestamp del reindex). `scripts/setup.py`
 è il setup a un comando per l'utente finale (init submodule shallow, `uv sync`, bootstrap);
-`scripts/update_corpus.py` è l'aggiornamento schedulabile. La registrazione in Claude Code è
+`scripts/update_corpus.py` è l'aggiornamento schedulabile; `scripts/fetch_codici.py` scarica da
+Normattiva (via `normattiva2md`) i codici fondamentali il cui articolato manca in italia-corpus
+(civile, penale, procedura civile, navigazione, penali militari) e li salva in `EXTRA_CORPUS_PATH`
+(`data/codici-extra`, tracciato), che il bootstrap indicizza insieme al submodule. Il parser
+riconosce gli articoli a 2-4 cancelletti con rubrica sia dopo il trattino (italia-corpus) sia tra
+parentesi (Normattiva). La registrazione in Claude Code è
 versionata in `.mcp.json` in radice; per Claude Desktop si usa la voce in `deployment.md`.
 
 ## Riferimenti a snippet

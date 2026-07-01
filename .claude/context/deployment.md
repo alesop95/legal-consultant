@@ -37,6 +37,11 @@ l'indice da zero; `uv run python scripts/query.py "<query>" [limit]` per la sani
 `uv run python -m legal_consultant.mcp_server` per avviare il server a mano in diagnosi (resta in
 ascolto su stdio; in uso normale è il client a lanciarlo).
 
+Codici fondamentali: `uv run python scripts/fetch_codici.py` scarica da Normattiva (via `uvx
+normattiva2md`) il testo integrale di codice civile, penale, procedura civile, navigazione e penali
+militari, assenti come articolato in italia-corpus, e li salva in `data/codici-extra` (tracciato,
+indicizzato dal bootstrap). Si rilancia per aggiornarli, seguito da un reindex.
+
 Aggiornamento del corpus (Fase 3): `uv run python scripts/update_corpus.py` fa il pull del
 submodule, reindicizza i soli atti cambiati via `git diff` e salva lo stato in `state.json`. Si
 schedula con Windows Task Scheduler (esecuzione giornaliera del comando nella cartella del
