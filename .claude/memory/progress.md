@@ -6,6 +6,16 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-01 — Ri-ancoraggio schede a 889f843 e chiusura sessione
+
+Commit: (schede/memoria da committare)
+File toccati: frontmatter di tutte le schede `.claude/context/*.md` (`last-verified-commit` →
+`889f843`), `.claude/memory/index.md` (commit di riferimento, tabella, punto di ripresa),
+`_notes/RESUME-PROMPT.md` (privato, riscritto sullo stato attuale). Motivo: dopo il commit
+`889f843` eseguito il ri-ancoraggio (skill `sync-context`, passo post-commit). Le schede ora
+coincidono con HEAD, nessun drift documentale. Registrato lo stato di chiusura: Fase A conclusa,
+resta aperto il drift di ranking del retrieval come primo task della prossima sessione.
+
 ## 2026-07-01 — Benchmark del retrieval e pesatura BM25 di rubrica/titolo + README operativo
 
 Commit: (non ancora committato)

@@ -6,7 +6,7 @@ covers-paths:
   - src/legal_consultant/**
   - scripts/**
   - pyproject.toml
-last-verified-commit: f954aaa
+last-verified-commit: 889f843
 ---
 
 # Stack applicativo

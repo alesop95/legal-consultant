@@ -8,24 +8,23 @@
 
 ```
 Branch attivo:         main
-Commit di riferimento: f954aaa
-Data snapshot:         2026-06-30
+Commit di riferimento: 889f843
+Data snapshot:         2026-07-01
 ```
 
 ## Stato di verifica delle schede
 
-Nota: le schede sono ri-ancorate a `f954aaa`, ma il loro contenuto descrive anche lo sviluppo
-non ancora committato (hardening, Fase 3, packaging, disclaimer): è avanti rispetto a HEAD finché
-non si committa e si rilancia `sync-context`.
+Tutte le schede sono ri-ancorate a HEAD (`889f843`) e il contenuto coincide: nessun drift
+documentale. L'unico drift aperto è di ranking (retrieval), tracciato in `current-work.md`.
 
 | Scheda | last-verified | Stato |
 |---|---|---|
-| STACK.md | f954aaa | aggiornata (Fase 1+2+3+packaging); contenuto avanti, da committare |
-| design-and-security.md | f954aaa | popolata (strati, update, mitigazione query); avanti |
-| deployment.md | f954aaa | popolata (setup, update_corpus, registrazione Claude Code/Desktop); avanti |
-| dev-testing.md | f954aaa | popolata (pytest, fixture, 9 test); avanti |
-| current-work.md | f954aaa | aggiornata (prodotto completo su fixture); avanti |
-| roadmap.md | f954aaa | aggiornata (Fase 3 e packaging fatti a codice); avanti |
+| STACK.md | 889f843 | allineata (Fase 1-3, packaging, codici, ranking pesato) |
+| design-and-security.md | 889f843 | allineata (strati, update, mitigazioni, path lunghi) |
+| deployment.md | 889f843 | allineata (installer, setup, registrazione client) |
+| dev-testing.md | 889f843 | allineata (pytest 10, fixture, benchmark) |
+| current-work.md | 889f843 | allineata (Fase A conclusa; drift ranking aperto) |
+| roadmap.md | 889f843 | allineata (benchmark misurato; ibrido come Fase 4) |
 
 ## Stato del corpus e dell'indice
 
@@ -39,18 +38,21 @@ Claude Desktop. I codici civile/penale/procedura civile (prima assenti) ora sono
 
 ## Punto di ripresa
 
-Fase 1 `6111cd3`, Fase 2 `f954aaa`, hardening/Fase 3/packaging `bd19b1d`, percorsi lunghi/vigenti/
-dedup `88f3f61`, codici fondamentali `f516086`. Non ancora committato: verifica/hardening da Claude
-Desktop (fix `info_corpus` via `state.json`, prompt rafforzato solo-legge-it, corpus come clone,
-`install.ps1`/`install.cmd`, `.gitignore`), più le schede. Prodotto verificato end-to-end in Claude
-Desktop: cita gli artt. 157-161-bis c.p. con URN dal corpus, niente web; `info_corpus` istantaneo.
-10 test verdi.
+Tutto committato fino a `889f843` (HEAD): prodotto completo e verificato end-to-end in Claude
+Desktop (cita artt. 157-161-bis c.p. con URN dal corpus, niente web; `info_corpus` istantaneo),
+con corpus reale + codici fondamentali, installer un clic, e ranking BM25 pesato su rubrica/titolo
+(Fase A del piano di test conclusa, recall@8 19/26). 10 test verdi. Schede ri-ancorate a `889f843`.
 
-Prossime azioni concrete. Primo: committare questo lotto (escludendo `data/index` e
-`data/italia-corpus`), poi rilanciare `sync-context` per ri-ancorare le schede. Secondo (setup
-permanente): creare il Project "Consulente Legale" in Claude Desktop con le istruzioni di
-`prompts/consulente-legale.md`, così il comportamento solo-legge-it è stabile senza ripeterlo.
-Terzo: provare `install.cmd` su una situazione pulita (altra macchina/utente) per validare
-l'installazione da zero. Limiti noti: "vigente" esclude solo la collezione abrogate, non garantisce
-la vigenza odierna (vale il disclaimer); ranking BM25 su query concettuali variabile, mitigato
-dall'uso di `leggi_atto` per l'articolo puntuale (ADR-003, eventuale ibrido futuro).
+Punto esatto in cui siamo: Fase A del piano di test conclusa con esito accettabile, MA resta un
+drift di ranking da risolvere (dettaglio nelle domande aperte di `current-work.md`): concetti non
+presenti nella rubrica non emergono, e rubriche omonime tra codici fanno vincere quello sbagliato
+(es. "diffamazione" → art. 227 codici penali militari invece di 595 c.p.).
+
+Prossime azioni, in ordine. Primo: risolvere il drift di ranking — leve candidate: preferire i
+codici generali (civile/penale) sui speciali a parità di rubrica; affinare i pesi BM25; in ultima
+istanza ibrido con embedding leggero CPU (ADR-003, Fase 4). Rimisurare con
+`scripts/benchmark_retrieval.py`. Secondo (Fase B): creare il Project "Consulente Legale" in Claude
+Desktop con le istruzioni di `prompts/consulente-legale.md` e provare dal vivo la batteria di
+domande. Terzo (Fasi C/D): provare `install.cmd` su una macchina/utente pulito; provare
+`update_corpus.py` (aggiornamento incrementale). Nota: dopo `git pull` o modifiche, rilanciare
+`sync-context`. La pesatura BM25 richiede il riavvio di Claude Desktop per essere caricata dal server.

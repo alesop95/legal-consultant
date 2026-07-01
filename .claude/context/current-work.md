@@ -10,7 +10,7 @@ covers-paths:
   - scripts/update_corpus.py
   - .mcp.json
   - prompts/**
-last-verified-commit: f954aaa
+last-verified-commit: 889f843
 stato: in lavorazione
 ---
 
@@ -64,11 +64,16 @@ Definition of done:
       artt. 157-161-bis c.p. con URN dal corpus; `info_corpus` reso istantaneo (legge da state.json)
 - [x] corpus come clone locale ignorato (non submodule), aggiornabile con `git pull`
 - [x] installer "un clic" (`install.cmd`/`install.ps1`): git+uv se mancano, longpaths, setup, registrazione
-- [ ] Project "Consulente Legale" in Claude Desktop con le istruzioni rafforzate (setup permanente)
-- [ ] prova dell'installer su una situazione pulita
+- [x] Fase A benchmark retrieval (`scripts/benchmark_retrieval.py`) + pesatura BM25 rubrica/titolo
+      adottata (recall@8 15/26 → 19/26)
+- [ ] risolvere il drift di ranking residuo (vedi domande aperte): concetti non nella rubrica e
+      rubriche omonime tra codici (es. "diffamazione" → art. 227 c.p. militari invece di 595 c.p.)
+- [ ] Fase B: Project "Consulente Legale" + batteria di domande dal vivo in Claude Desktop
+- [ ] prova dell'installer su una situazione pulita (Fase C); prova aggiornamento (Fase D)
 
-Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali e
-l'installer. Restano il Project permanente e la prova dell'installer da zero.
+Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali,
+l'installer e il ranking pesato. Fase A conclusa con risultato accettabile ma con un drift di
+ranking residuo da risolvere. Restano le Fasi B/C/D del piano di test.
 
 Domande aperte:
 
@@ -76,16 +81,18 @@ Domande aperte:
   filtro esclude solo la collezione "Atti normativi abrogati (in originale)". Non garantisce la
   vigenza odierna di un atto su Normattiva: vale il disclaimer. I codici integrati sono scaricati
   alla vigenza odierna ma vanno rinfrescati con `fetch_codici.py`.
-- Ranking BM25 su query concettuali: variabile (a volte l'articolo centrale di un codice non emerge
-  in cima). Misurare e, se il recall non basta, valutare l'ibrido dense+sparse (ADR-003).
+- Drift di ranking (DA RISOLVERE, Fase A accettabile ma non ottimale): misurato con
+  `scripts/benchmark_retrieval.py`. Con la pesatura rubrica/titolo recall@8 = 19/26. Due residui:
+  (a) concetti la cui parola non è nella rubrica non emergono (usura, danno ambientale, doveri
+  verso i figli); (b) rubriche omonime tra codici fanno vincere quello sbagliato (es. "diffamazione"
+  → art. 227 codici penali militari invece di 595 c.p.). Leve candidate: preferire i codici generali
+  (civile/penale) su quelli speciali a parità di rubrica; affinare i pesi; in ultima istanza ibrido
+  con embedding leggero CPU (ADR-003, Fase 4). Nel prodotto è mitigato da conoscenza + `leggi_atto`.
 - Trasparenza: il `git submodule add` iniziale resta un passo del manutentore; valutare la
   distribuzione di un indice pre-costruito per saltare il bootstrap pesante al primo uso.
 
 ## Riconciliazione
 
-Ultima verifica: 2026-07-01. Da committare due lotti sovrapposti non ancora versionati:
-l'integrazione dei codici fondamentali (regex rubrica, `EXTRA_CORPUS_PATH`, `fetch_codici.py`,
-bootstrap multi-radice, `data/codici-extra`) e la verifica/hardening in Claude Desktop (fix
-`info_corpus` via `state.json`, prompt rafforzato, corpus come clone, installer, `.gitignore`),
-più queste schede. Tutto verificato end-to-end. Dopo il commit, rilanciare `sync-context` per
-ri-ancorare al nuovo HEAD.
+Ultima verifica: 2026-07-01. Tutto committato fino a `889f843` (ranking pesato, README, installer,
+fix info_corpus, corpus come clone) e schede ri-ancorate a `889f843`: contenuto allineato a HEAD,
+nessun drift documentale. Aperto solo il drift di ranking (vedi domande aperte), da risolvere.
