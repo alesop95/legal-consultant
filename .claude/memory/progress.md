@@ -6,6 +6,44 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-01 — Benchmark del retrieval e pesatura BM25 di rubrica/titolo + README operativo
+
+Commit: (non ancora committato)
+File toccati: `scripts/benchmark_retrieval.py` (nuovo: 26 domande reali con articolo atteso,
+recall@1/5/8, default vs pesato); `src/legal_consultant/index/fts.py` (`search` ora usa
+`bm25` con pesi per colonna, `_BM25`); `README.md` (installazione e uso: installer un clic,
+setup veloce, Project permanente, aggiornamento, limiti).
+Motivo: Fase A del piano di test. Misurata la qualità del retrieval sull'indice reale: la
+ricerca lessicale sul primo risultato spesso non è l'articolo cardine. Pesare rubrica (x12) e
+titolo (x3) rispetto al corpo migliora nettamente e senza reindicizzare (recall@8 15/26 → 19/26,
+recall@5 13 → 15): licenziamento, risoluzione, diffamazione, furto, recesso consumatore salgono.
+Pesatura adottata in `fts.search`. Resta un tetto lessicale (~27% dei concetti non emerge in
+top-8, es. usura, danno ambientale, doveri verso i figli) colmabile solo con ricerca ibrida
+semantica (ADR-003); nel prodotto è mitigato dal modello che identifica il numero e usa
+`leggi_atto`. `uv run pytest` → 10 verdi.
+
+## 2026-07-01 — Verifica end-to-end in Claude Desktop, fix info_corpus, installer, corpus come clone
+
+Commit: (non ancora committato)
+File toccati: `src/legal_consultant/mcp_server.py` (`info_corpus` legge da `state.json`, niente
+conteggi/git a runtime; prompt `consulenza_legale` rafforzato: solo legge-it, mai web, usa
+`leggi_atto` per l'articolo puntuale); `scripts/bootstrap_index.py` (scrive `state.json` a fine
+indicizzazione); `src/legal_consultant/update/__init__.py` (timeout su git in `_git`, except allargato
+a `SubprocessError`); `scripts/setup.py` (corpus come clone locale, non più submodule); `.gitignore`
+(`data/italia-corpus/` ignorato); `prompts/consulente-legale.md` (istruzioni rafforzate); nuovi
+`install.ps1` e `install.cmd`.
+Motivo: prima prova in Claude Desktop (Sonnet 5) — senza le istruzioni del Project il modello
+ignorava legge-it e cercava sul web; con il prompt esplicito "solo legge-it, no web" ha invece
+chiamato `cerca_normativa` + `leggi_atto` e citato gli artt. 157-161-bis c.p. con URN dal corpus,
+niente web. Emerso un timeout: `info_corpus` faceva `COUNT` sull'indice da 2.6 GB e in Claude
+Desktop (cache fredda) superava i 4 minuti; risolto leggendo le statistiche precalcolate da
+`state.json` scritto dal bootstrap. Aggiunto timeout a git per sicurezza. Deciso il passaggio del
+corpus da submodule a clone locale ignorato (git pull per l'aggiornamento: sempre l'ultima versione).
+Costruito l'installer "un clic" (`install.cmd` → `install.ps1`): installa git/uv se mancano,
+configura `core.longpaths`, esegue `setup.py`, registra legge-it in Claude Desktop, senza admin.
+Verifica: dopo riavvio dell'app, risposta completa sulla prescrizione dal corpus + `info_corpus`
+istantaneo (screenshot). `uv run pytest` → 10 verdi.
+
 ## 2026-06-30 — Integrazione codici fondamentali da Normattiva (civile, penale, ecc.)
 
 Commit: (non ancora committato)

@@ -3,15 +3,13 @@
 Uso:
     uv run python scripts/setup.py
 
-Tre passi: scarica il corpus (inizializza il submodule git in shallow), sincronizza
-l'ambiente con uv, costruisce l'indice di ricerca. Al termine il server MCP e' pronto;
-la registrazione nel client (Claude Code o Claude Desktop) e' descritta in
-`.claude/context/deployment.md`.
+Tre passi: scarica il corpus (clone shallow di italia-corpus), sincronizza l'ambiente con
+uv, costruisce l'indice di ricerca. Al termine il server MCP e' pronto; la registrazione
+nel client (Claude Code o Claude Desktop) e' descritta in `.claude/context/deployment.md`.
 
-Pensato per essere l'unico comando che un utente non tecnico deve lanciare. Non esegue
-operazioni git che modificano la storia del repo: l'aggiunta iniziale del submodule
-(`git submodule add`) resta un passo del manutentore, qui si assume gia' presente in
-`.gitmodules`.
+Il corpus e' un clone locale ignorato da git, non un submodule: cosi' resta sempre
+all'ultima versione e si aggiorna con `git pull` (scripts/update_corpus.py). Il testo dei
+codici fondamentali e' gia' versionato nel repo (data/codici-extra), quindi non va scaricato.
 """
 
 from __future__ import annotations
@@ -21,6 +19,8 @@ import sys
 from pathlib import Path
 
 from legal_consultant.config import CORPUS_PATH, REPO_ROOT
+
+_CORPUS_URL = "https://github.com/ahmeabd/italia-corpus.git"
 
 
 def _run(cmd: list[str]) -> None:
@@ -34,26 +34,17 @@ def _corpus_presente(corpus: Path) -> bool:
 
 def main() -> int:
     corpus = Path(CORPUS_PATH)
-    gitmodules = REPO_ROOT / ".gitmodules"
 
     print("== 1/3 Corpus ==")
     if _corpus_presente(corpus):
         print(f"Corpus gia' presente in {corpus}, salto il download.")
-    elif gitmodules.is_file():
-        # -c core.longpaths=true: i nomi-file lunghi del corpus superano il limite di
-        # 260 caratteri di Windows; questo fa usare a git le API estese, senza admin.
-        _run(["git", "-c", "core.longpaths=true", "submodule", "update",
-              "--init", "--depth", "1", "data/italia-corpus"])
-        # Persiste l'impostazione nel clone, così anche i pull futuri estraggono i path lunghi.
-        _run(["git", "-C", "data/italia-corpus", "config", "core.longpaths", "true"])
     else:
-        print(
-            "Corpus non configurato come submodule (.gitmodules assente). Il manutentore "
-            "deve eseguirlo una volta:\n"
-            "  git submodule add --depth 1 "
-            "https://github.com/ahmeabd/italia-corpus.git data/italia-corpus"
-        )
-        return 1
+        # Clone shallow. -c core.longpaths=true: i nomi-file lunghi del corpus superano
+        # il limite di 260 caratteri di Windows; fa usare a git le API estese, senza admin.
+        _run(["git", "-c", "core.longpaths=true", "clone", "--depth", "1",
+              _CORPUS_URL, str(corpus)])
+        # Persiste l'impostazione nel clone, cosi' anche i pull futuri estraggono i path lunghi.
+        _run(["git", "-C", str(corpus), "config", "core.longpaths", "true"])
 
     print("\n== 2/3 Ambiente ==")
     _run(["uv", "sync"])
@@ -64,7 +55,8 @@ def main() -> int:
     print(
         "\nSetup completato. Il server MCP 'legge-it' e' pronto.\n"
         "Claude Code: apri questo progetto e approva il server in .mcp.json.\n"
-        "Claude Desktop: aggiungi la voce di deployment.md a claude_desktop_config.json."
+        "Claude Desktop: usa install.ps1 oppure aggiungi la voce di deployment.md a\n"
+        "claude_desktop_config.json."
     )
     return 0
 

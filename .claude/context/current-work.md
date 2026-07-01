@@ -60,12 +60,15 @@ Definition of done:
 - [x] registrati in Claude Desktop (claude_desktop_config.json) e verificato end-to-end via screenshot
 - [x] codici fondamentali (civile, penale, proc. civile, navigazione, penali militari) integrati da
       Normattiva via `fetch_codici.py` in `data/codici-extra`; art. 2043 c.c./157 c.p./112 c.p.c. trovati
-- [ ] registrare il corpus come submodule per la riproducibilità del clone (productizzazione)
-- [ ] installer da un clic per utente non tecnico (git+uv, longpaths, setup, registrazione client)
+- [x] prova end-to-end in Claude Desktop (Sonnet 5): con prompt "solo legge-it, no web" cita gli
+      artt. 157-161-bis c.p. con URN dal corpus; `info_corpus` reso istantaneo (legge da state.json)
+- [x] corpus come clone locale ignorato (non submodule), aggiornabile con `git pull`
+- [x] installer "un clic" (`install.cmd`/`install.ps1`): git+uv se mancano, longpaths, setup, registrazione
+- [ ] Project "Consulente Legale" in Claude Desktop con le istruzioni rafforzate (setup permanente)
+- [ ] prova dell'installer su una situazione pulita
 
-Stato: prodotto completo e funzionante end-to-end sul corpus reale, ampliato con i codici
-fondamentali. Indice 287.816 atti, 966.126 chunk. Server verificato in Claude Desktop. Restano la
-registrazione del submodule e l'installer da un clic.
+Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali e
+l'installer. Restano il Project permanente e la prova dell'installer da zero.
 
 Domande aperte:
 
@@ -80,8 +83,9 @@ Domande aperte:
 
 ## Riconciliazione
 
-Ultima verifica: 2026-06-30. Percorsi lunghi, fix vigenti e dedup committati in `88f3f61`. Non
-ancora committato: integrazione dei codici fondamentali (regex rubrica estesa, `EXTRA_CORPUS_PATH`,
-`fetch_codici.py`, bootstrap multi-radice, `data/codici-extra`), più queste schede. Indice
-ricostruito e verificato sui codici. Dopo il
-commit di questo lotto, rilanciare `sync-context` per ri-ancorare al nuovo HEAD.
+Ultima verifica: 2026-07-01. Da committare due lotti sovrapposti non ancora versionati:
+l'integrazione dei codici fondamentali (regex rubrica, `EXTRA_CORPUS_PATH`, `fetch_codici.py`,
+bootstrap multi-radice, `data/codici-extra`) e la verifica/hardening in Claude Desktop (fix
+`info_corpus` via `state.json`, prompt rafforzato, corpus come clone, installer, `.gitignore`),
+più queste schede. Tutto verificato end-to-end. Dopo il commit, rilanciare `sync-context` per
+ri-ancorare al nuovo HEAD.

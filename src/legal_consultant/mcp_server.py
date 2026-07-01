@@ -19,7 +19,7 @@ from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
 from . import update
-from .config import CORPUS_PATH, INDEX_PATH, STATE_PATH
+from .config import INDEX_PATH, STATE_PATH
 from .index import fts
 
 mcp = FastMCP("legge-it")
@@ -135,37 +135,27 @@ def info_corpus() -> dict:
     """
     if not INDEX_PATH.exists():
         return _index_missing_msg()
-    conn = fts.connect(INDEX_PATH)
-    try:
-        n_atti, n_chunks = fts.corpus_stats(conn)
-    finally:
-        conn.close()
-
-    info: dict = {
-        "atti_indicizzati": n_atti,
-        "chunk_indicizzati": n_chunks,
-        "indice": str(INDEX_PATH),
-    }
+    # Legge le statistiche gia' calcolate dal bootstrap in state.json: e' istantaneo e
+    # non tocca il database. Evita di contare a runtime sui ~10^6 chunk dell'indice, che
+    # su un file da qualche GB puo' essere lento e far scadere la chiamata dal client.
     state = update.read_state(STATE_PATH)
-    if state:
-        info["corpus_commit"] = state.get("corpus_commit")
-        info["corpus_aggiornato_il"] = state.get("corpus_date")
-        info["ultimo_reindex_utc"] = state.get("reindicizzato_il")
-        info["fonte_freschezza"] = "state.json (aggiornamento incrementale)"
-    else:
-        commit, date = update.corpus_revision(CORPUS_PATH)
-        if commit:
-            info["corpus_commit"] = commit
-            info["corpus_aggiornato_il"] = date
-            info["fonte_freschezza"] = "git del submodule corpus"
+    if not state:
         mtime = datetime.fromtimestamp(Path(INDEX_PATH).stat().st_mtime, tz=timezone.utc)
-        info["ultima_indicizzazione_utc"] = mtime.isoformat(timespec="seconds")
-        info.setdefault(
-            "fonte_freschezza",
-            "mtime dell'indice (aggiornamento incrementale non ancora eseguito)",
-        )
-    info["nota_legale"] = DISCLAIMER
-    return info
+        return {
+            "indice": str(INDEX_PATH),
+            "ultima_indicizzazione_utc": mtime.isoformat(timespec="seconds"),
+            "avviso": "Statistiche non ancora disponibili: eseguire scripts/bootstrap_index.py.",
+            "nota_legale": DISCLAIMER,
+        }
+    return {
+        "atti_indicizzati": state.get("atti"),
+        "chunk_indicizzati": state.get("chunk"),
+        "corpus_commit": state.get("corpus_commit"),
+        "corpus_aggiornato_il": state.get("corpus_date"),
+        "ultima_indicizzazione_utc": state.get("reindicizzato_il"),
+        "indice": str(INDEX_PATH),
+        "nota_legale": DISCLAIMER,
+    }
 
 
 @mcp.prompt()
@@ -175,12 +165,15 @@ def consulenza_legale() -> str:
     all'inizio di una conversazione."""
     return (
         "Sei un consulente legale che risponde sul diritto italiano basandosi solo sul "
-        "corpus normativo locale, mai a memoria. Procedi cosi':\n"
-        "1. Per ogni domanda di diritto chiama prima `cerca_normativa` con i concetti "
-        "rilevanti; se servono i dettagli leggi il testo con `leggi_atto`.\n"
+        "corpus normativo locale esposto da questo server. Usa sempre e solo gli "
+        "strumenti legge-it: non usare la ricerca web e non rispondere a memoria.\n"
+        "1. Per ogni domanda di diritto chiama `cerca_normativa` con i concetti "
+        "rilevanti. Se sai gia' quale articolo disciplina la materia (es. prescrizione "
+        "del reato agli artt. 157 e ss. c.p.), usa `leggi_atto` con URN e numero "
+        "dell'articolo per il testo esatto, senza affidarti solo al ranking.\n"
         "2. Rispondi solo sulla base degli estratti restituiti. Cita sempre atto e "
-        "articolo con il loro URN. Se l'informazione non e' nel corpus, dichiaralo "
-        "invece di ipotizzare.\n"
+        "articolo con il loro URN. Se una norma non e' nel corpus, dichiaralo e non "
+        "cercarla sul web: suggerisci di verificarla su Normattiva.\n"
         "3. Usa `info_corpus` per dire quanto e' aggiornata la base normativa quando "
         "la freschezza e' rilevante.\n"
         f"4. Chiudi sempre con il disclaimer: {DISCLAIMER}"

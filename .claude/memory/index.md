@@ -39,18 +39,18 @@ Claude Desktop. I codici civile/penale/procedura civile (prima assenti) ora sono
 
 ## Punto di ripresa
 
-Fase 1 in `6111cd3`, Fase 2 in `f954aaa`, hardening/Fase 3/packaging/disclaimer in `bd19b1d`.
-Non ancora committato (questa sessione): gestione percorsi lunghi Windows (`config.long_path`,
-`setup.py` con `core.longpaths`), declassamento delle abrogate a non vigenti nel parser, deduplica
-in `search`, più aggiornamenti delle schede. Il corpus reale è clonato e l'indice completo è
-costruito (vedi sezione sopra); server MCP verificato sull'indice reale; 9 test verdi.
+Fase 1 `6111cd3`, Fase 2 `f954aaa`, hardening/Fase 3/packaging `bd19b1d`, percorsi lunghi/vigenti/
+dedup `88f3f61`, codici fondamentali `f516086`. Non ancora committato: verifica/hardening da Claude
+Desktop (fix `info_corpus` via `state.json`, prompt rafforzato solo-legge-it, corpus come clone,
+`install.ps1`/`install.cmd`, `.gitignore`), più le schede. Prodotto verificato end-to-end in Claude
+Desktop: cita gli artt. 157-161-bis c.p. con URN dal corpus, niente web; `info_corpus` istantaneo.
+10 test verdi.
 
-Prossime azioni concrete, in ordine. Primo: committare il codice di questa sessione (percorsi
-lunghi, vigenti, dedup) e le schede, escludendo `data/`, poi rilanciare `sync-context`. Secondo
-(productizzazione): registrare il corpus come submodule per la riproducibilità del clone — il
-clone esistente in `data/italia-corpus` è funzionante ma non registrato; `git submodule add` va
-fatto con `-c core.longpaths=true`. Terzo: usare il consulente da chat — aprire il progetto in una
-nuova sessione di Claude Code e approvare il server di `.mcp.json`, oppure registrarlo in Claude
-Desktop, poi i casi d'uso concordati con l'utente. Limite noto da comunicare: "vigente" qui esclude
-solo la collezione delle abrogate, non garantisce la vigenza odierna su Normattiva (vale il
-disclaimer); ranking BM25 su query concettuali da valutare (ADR-003, eventuale ibrido).
+Prossime azioni concrete. Primo: committare questo lotto (escludendo `data/index` e
+`data/italia-corpus`), poi rilanciare `sync-context` per ri-ancorare le schede. Secondo (setup
+permanente): creare il Project "Consulente Legale" in Claude Desktop con le istruzioni di
+`prompts/consulente-legale.md`, così il comportamento solo-legge-it è stabile senza ripeterlo.
+Terzo: provare `install.cmd` su una situazione pulita (altra macchina/utente) per validare
+l'installazione da zero. Limiti noti: "vigente" esclude solo la collezione abrogate, non garantisce
+la vigenza odierna (vale il disclaimer); ranking BM25 su query concettuali variabile, mitigato
+dall'uso di `leggi_atto` per l'articolo puntuale (ADR-003, eventuale ibrido futuro).

@@ -23,12 +23,13 @@ from ..ingest.parser import parse_act
 _SKIP_NAMES = {"README.md", "CONTRIBUTING.md", "LICENSE", "LICENSE.md"}
 
 
-def _git(corpus_root: str | Path, *args: str) -> str:
+def _git(corpus_root: str | Path, *args: str, timeout: float = 30) -> str:
     """Esegue git nel repo del corpus e restituisce stdout. Solleva
-    CalledProcessError sul fallimento, FileNotFoundError se git non c'e'."""
+    CalledProcessError sul fallimento, FileNotFoundError se git non c'e',
+    TimeoutExpired oltre `timeout` secondi (così una chiamata non blocca mai un tool)."""
     res = subprocess.run(
         ["git", "-C", str(corpus_root), *args],
-        capture_output=True, text=True, check=True,
+        capture_output=True, text=True, check=True, timeout=timeout,
     )
     return res.stdout.strip()
 
@@ -39,7 +40,7 @@ def corpus_revision(corpus_root: str | Path) -> tuple[str | None, str | None]:
     accessoria che non deve far fallire un tool."""
     try:
         out = _git(corpus_root, "log", "-1", "--format=%H%x09%cI")
-    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+    except (subprocess.SubprocessError, FileNotFoundError, OSError):
         return None, None
     commit, _, date = out.partition("\t")
     return (commit or None), (date or None)

@@ -51,6 +51,13 @@ CREATE VIRTUAL TABLE IF NOT EXISTS chunks USING fts5(
 # Indici di colonna (0-based) per snippet(): 4=titolo, 10=testo.
 _COL_TESTO = 10
 
+# Pesi BM25 per colonna (uno per ognuna delle 11 colonne del DDL). Titolo e soprattutto
+# rubrica pesano più del corpo: in un corpus giuridico l'articolo la cui rubrica coincide
+# con la domanda è quasi sempre quello cercato. Misurato su scripts/benchmark_retrieval.py
+# (recall@8 da 15/26 a 19/26). Le colonne UNINDEXED hanno peso ininfluente (posto a 0).
+#           urn tipo num data  titolo coll art  rubrica vig path testo
+_BM25 = "bm25(chunks, 0,0,0,0,  3.0,   0,  1.0, 12.0,   0,   0,  1.0)"
+
 
 def connect(db_path: str | Path) -> sqlite3.Connection:
     conn = sqlite3.connect(str(db_path))
@@ -120,7 +127,7 @@ def search(
     sql = [
         "SELECT urn, tipo, numero, data, titolo, collezione, articolo, rubrica, vigente, path,",
         f"       snippet(chunks, {_COL_TESTO}, '[', ']', ' … ', 16) AS estratto,",
-        "       bm25(chunks) AS score",
+        f"       {_BM25} AS score",
         "FROM chunks WHERE chunks MATCH ?",
     ]
     params: list[object] = [match]

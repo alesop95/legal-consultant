@@ -13,7 +13,8 @@ import sys
 import time
 from pathlib import Path
 
-from legal_consultant.config import CORPUS_PATH, EXTRA_CORPUS_PATH, INDEX_PATH
+from legal_consultant import update
+from legal_consultant.config import CORPUS_PATH, EXTRA_CORPUS_PATH, INDEX_PATH, STATE_PATH
 from legal_consultant.index import fts
 from legal_consultant.ingest.parser import parse_act
 
@@ -68,6 +69,12 @@ def main() -> int:
     conn.execute("INSERT INTO chunks(chunks) VALUES('optimize')")
     conn.commit()
     conn.close()
+
+    # Statistiche e freschezza in state.json, così `info_corpus` le legge in un istante
+    # senza contare a runtime sull'indice (che su qualche GB sarebbe lento).
+    commit, date = update.corpus_revision(CORPUS_PATH)
+    update.write_state(STATE_PATH, commit, date, total - errors, chunks)
+
     print(f"Fatto: {total} atti, {chunks} chunk, {errors} errori, "
           f"{time.monotonic() - t0:.0f}s. Indice: {db}")
     return 0

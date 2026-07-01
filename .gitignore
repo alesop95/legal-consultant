@@ -12,8 +12,12 @@ _notes/.tmp-docx-*/
 *.docx
 
 # === Dati locali rigenerabili ===
-# L'indice FTS5 si ricostruisce dal corpus; il corpus e' un submodule (tracciato come gitlink).
+# L'indice FTS5 si ricostruisce dal corpus; il corpus e' un clone locale di italia-corpus,
+# tenuto fresco con git pull (non un submodule: vogliamo sempre l'ultima versione, non un
+# commit fissato). Entrambi restano fuori da git. I codici fondamentali scaricati da
+# Normattiva in data/codici-extra sono invece TRACCIATI (piccoli, stabili, spediti col repo).
 data/index/
+data/italia-corpus/
 
 # === Python (versiona il manifesto, ignora il derivato — §13) ===
 .venv/

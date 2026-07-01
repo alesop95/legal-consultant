@@ -36,7 +36,10 @@ citazioni verificabili.
 
 ## Idee e ipotesi da verificare
 
-- Recall del solo BM25 su query concettuali: da misurare; se insufficiente, ibrido (ADR-003).
+- Recall del solo BM25 su query concettuali: misurato con `scripts/benchmark_retrieval.py`
+  (26 domande). Con la pesatura di rubrica/titolo, recall@8 = 19/26; ~27% dei concetti non
+  emerge perché la parola non è nella rubrica. Prossimo lever di qualità: ricerca ibrida con
+  embedding leggero CPU (ADR-003), da valutare come Fase 4.
 - Schema reale del frontmatter YAML del corpus (ADR-004): confermato su atti reali in Fase 1.
 - Disponibilità di server MCP locali sul piano Team (ADR-002): confermata di fatto dall'uso di
   `obsidian-vaults` sulla stessa installazione di Claude Desktop.
