@@ -73,9 +73,9 @@ la lettura più probabile quando due codici condividono la stessa rubrica (es. "
 art. 595 c.p. e l'omonimo art. 227 dei codici penali militari). La colonna `score` esposta ai tool
 resta il BM25 grezzo di FTS5, metrica trasparente; l'ordinamento restituito riflette invece il
 punteggio corretto. Misurato su `scripts/benchmark_retrieval.py`: recall@1 10→14/26, recall@5
-15→19/26, recall@8 invariato a 19/26; verificato anche con `fts.search(..., limit=1)` diretto sulle
-6 query di un test dal vivo in Claude Desktop (5/6 corrette), che aveva inizialmente rivelato il
-bug del sovra-campionamento legato a `limit` prima di questo fix.
+15→19/26, recall@8 invariato a 19/26; confermato dal vivo in Claude Desktop su 6 query con
+`limit=1` (5/6 corrette), lo stesso test che aveva inizialmente rivelato il bug del
+sovra-campionamento legato a `limit` prima di questo fix.
 
 Il package `update` gestisce l'aggiornamento incrementale (Fase 3): `corpus_revision` legge commit
 e data dell'HEAD del corpus, `pull` fa il fast-forward del submodule, `changed_files` calcola via

@@ -6,9 +6,22 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-02 — Riconferma dal vivo in Claude Desktop dopo il fix
+
+Commit: nessuno (verifica, nessun file di codice toccato)
+File toccati: nessuno.
+Motivo: ripetuto in Claude Desktop (Sonnet 4.6, ragionamento alto), dopo il riavvio dell'app e il
+commit `0d0667a`, lo stesso identico prompt di verifica sulle 6 query con `limit=1`
+(screenshot_01.png). Esito: 5/6 corrette (furto, omicidio, usura, diffamazione, truffa), come
+previsto dalla verifica diretta via `fts.search` della voce precedente. L'unico errore, "risoluzione
+del contratto per inadempimento" → art. 1564 c.c. invece di 1453, è il residuo noto (ambiguità
+norma generale/norme speciali nello stesso codice); il modello lo ha diagnosticato correttamente da
+sé in chat come limite del ranking lessicale, senza che gli fosse stato detto. Chiude il ciclo
+affinamento-test-fix-riconferma iniziato con la richiesta di affinare il motore di ricerca.
+
 ## 2026-07-02 — Fix del test dal vivo: sovra-campionamento legato a `limit`, bonus codici generali insufficiente
 
-Commit: (non ancora committato)
+Commit: 0d0667a
 File toccati: `src/legal_consultant/index/fts.py` (`search`: `oversample = max(limit * 50, 400)`
 invece di `limit * 50`; `_CODICE_GENERALE_BONUS` da -3/-2 a -6/-4 su civile/penale/proc. civile).
 Motivo: test dal vivo in Claude Desktop (Sonnet 4.6, ragionamento alto) col prompt di verifica

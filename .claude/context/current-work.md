@@ -70,22 +70,26 @@ Definition of done:
       `to_match_query`, `_rubrica_bonus` (corrispondenza rubrica-domanda) e
       `_CODICE_GENERALE_BONUS` (spareggio sui codici generali) in `fts.search`, sovra-campionamento
       a 50x (recall@1 10→13/26, recall@5 15→19/26; vedi domande aperte per il residuo)
-- [x] fix del test dal vivo (non ancora committato): il test in Claude Desktop (screenshot, 6
-      query con `limit=1`) ha dato solo 3/6 corrette, scoprendo un bug non colto dal benchmark
+- [x] fix del test dal vivo (committato in `0d0667a`): il test in Claude Desktop (screenshot, 6
+      query con `limit=1`) aveva dato solo 3/6 corrette, scoprendo un bug non colto dal benchmark
       (`limit=8`): il sovra-campionamento scalava su `limit`, e con `limit=1` (usato da Claude
       Desktop per isolare il primo risultato) la finestra di ricalcolo crollava a sole 50 righe;
       corretto con un minimo fisso di 400. Bonus codici generali alzato da -3/-2 a -6/-4 per
-      risolvere anche "diffamazione" in prima posizione, non solo in top-8. Dopo il fix, recall@1
-      10→14/26; con `limit=1` esatto 5/6 corrette via `fts.search` diretto, riscontro dal vivo in
-      Claude Desktop non ancora ripetuto.
+      risolvere anche "diffamazione" in prima posizione, non solo in top-8. Ripetuto lo stesso test
+      dal vivo in Claude Desktop dopo il riavvio (Sonnet 4.6, ragionamento alto, screenshot_01.png):
+      5/6 corrette, confermato. L'unico errore (query 6, "risoluzione del contratto per
+      inadempimento" → art. 1564 invece di 1453 c.c.) è il residuo noto, non un nuovo bug; il
+      modello stesso lo ha diagnosticato correttamente in chat come limite del ranking lessicale su
+      quella formulazione.
 - [ ] Fase B: Project "Consulente Legale" + batteria di domande dal vivo in Claude Desktop
 - [ ] prova dell'installer su una situazione pulita (Fase C); prova aggiornamento (Fase D)
 
 Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali,
-l'installer e il ranking pesato e affinato (`995e154`). Un secondo fix, trovato dal test dal vivo
-subito dopo quel commit, non è ancora committato. Fase A conclusa; il drift di ranking è stato
-analizzato a fondo e in parte risolto, col residuo isolato in quattro cause distinte (vedi domande
-aperte), tutte strutturali al solo BM25. Restano le Fasi B/C/D del piano di test.
+l'installer e il ranking pesato, affinato e corretto (`995e154`, `0d0667a`), riconfermato dal vivo
+in Claude Desktop dopo il fix (5/6, screenshot_01.png). Fase A conclusa; il drift di ranking è
+stato analizzato a fondo e risolto per quanto possibile su base lessicale, col residuo isolato in
+quattro cause distinte (vedi domande aperte), tutte strutturali al solo BM25. Restano le Fasi
+B/C/D del piano di test.
 
 Domande aperte:
 
@@ -93,8 +97,7 @@ Domande aperte:
   filtro esclude solo la collezione "Atti normativi abrogati (in originale)". Non garantisce la
   vigenza odierna di un atto su Normattiva: vale il disclaimer. I codici integrati sono scaricati
   alla vigenza odierna ma vanno rinfrescati con `fetch_codici.py`.
-- Drift di ranking (AFFINATO, primo giro committato in `995e154`, fix del test dal vivo pendente):
-  in `fts.py` aggiunti il filtro delle
+- Drift di ranking (AFFINATO E VERIFICATO DAL VIVO, `995e154` + `0d0667a`): in `fts.py` aggiunti il filtro delle
   stopword italiane in `to_match_query` (senza, "di"/"nel" da soli abbinavano centinaia di
   migliaia di righe e diluivano il campione), `_rubrica_bonus` (premia le rubriche quasi
   interamente coperte dalle parole di contenuto della domanda, es. "Furto" su "furto") e
@@ -107,12 +110,11 @@ Domande aperte:
   corrispondenze grezze) e perché un `limit` piccolo (Claude Desktop chiama con `limit=1` per
   isolare il primo risultato) non deve restringere la finestra di ricalcolo. Misurato su
   `scripts/benchmark_retrieval.py`: recall@1 10→14/26, recall@5 15→19/26, recall@8 invariato a
-  19/26 ma con risultati molto più in alto in classifica; verificato con `fts.search(...,
-  limit=1)` diretto sulle stesse 6 query usate dal test dal vivo in Claude Desktop (furto,
-  omicidio, usura, diffamazione, truffa, risoluzione contratto): 5/6 corrette dopo il fix del
-  sovra-campionamento (3/6 prima del fix, riscontrato nel test dal vivo). Il riscontro dal vivo in
-  Claude Desktop dopo il fix non è ancora stato ripetuto. Il residuo non è più un'unica causa
-  generica ma quattro isolate e diverse: rubriche nel corpus genuinamente
+  19/26 ma con risultati molto più in alto in classifica; confermato dal vivo in Claude Desktop
+  (Sonnet 4.6, ragionamento alto) sulle stesse 6 query in due passaggi: 3/6 corrette prima del fix
+  del sovra-campionamento (screenshot_16.png, screenshot_17.png), 5/6 dopo (screenshot_01.png). Il
+  residuo non è più un'unica causa generica ma quattro isolate e diverse: rubriche nel corpus
+  genuinamente
   scollegate dal contenuto sostanziale dell'articolo (art. 633 c.p.c. sul decreto ingiuntivo ha
   rubrica "Condizioni di ammissibilità", art. 128 codice del consumo sulla garanzia di conformità
   ha rubrica "Ambito di applicazione e definizioni"); variazione di lemma non colta dal matching
@@ -132,8 +134,8 @@ Domande aperte:
 
 ## Riconciliazione
 
-Ultima verifica: 2026-07-02. Codice committato fino a `995e154` (primo affinamento del ranking); il
-fix del test dal vivo descritto sopra (`fts.py`, 12 test verdi) non è ancora committato. Questa
-scheda è aggiornata oltre `995e154`: dopo che l'utente esegue `git add`/`git commit` sul fix, un
-passo di ri-ancoraggio (skill `sync-context`) allinea `last-verified-commit` al nuovo hash, senza
-bisogno di riscrivere il contenuto.
+Ultima verifica: 2026-07-02. Codice committato fino a `0d0667a` (affinamento del ranking in
+`995e154`, fix del test dal vivo in `0d0667a`), confermato dal vivo in Claude Desktop dopo il
+riavvio (5/6, screenshot_01.png). Questa scheda è aggiornata oltre l'ultimo commit solo per
+registrare l'esito della conferma dal vivo: un passo di ri-ancoraggio (skill `sync-context`)
+allineerà `last-verified-commit` a `0d0667a` al prossimo commit di questa scheda.
