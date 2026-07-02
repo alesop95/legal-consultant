@@ -66,14 +66,18 @@ Definition of done:
 - [x] installer "un clic" (`install.cmd`/`install.ps1`): git+uv se mancano, longpaths, setup, registrazione
 - [x] Fase A benchmark retrieval (`scripts/benchmark_retrieval.py`) + pesatura BM25 rubrica/titolo
       adottata (recall@8 15/26 → 19/26)
-- [ ] risolvere il drift di ranking residuo (vedi domande aperte): concetti non nella rubrica e
-      rubriche omonime tra codici (es. "diffamazione" → art. 227 c.p. militari invece di 595 c.p.)
+- [x] affinamento del ranking (non ancora committato): filtro stopword italiane in
+      `to_match_query`, `_rubrica_bonus` (corrispondenza rubrica-domanda) e
+      `_CODICE_GENERALE_BONUS` (spareggio sui codici generali) in `fts.search`, sovra-campionamento
+      a 50x (recall@1 10→13/26, recall@5 15→19/26; vedi domande aperte per il residuo)
 - [ ] Fase B: Project "Consulente Legale" + batteria di domande dal vivo in Claude Desktop
 - [ ] prova dell'installer su una situazione pulita (Fase C); prova aggiornamento (Fase D)
 
 Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali,
-l'installer e il ranking pesato. Fase A conclusa con risultato accettabile ma con un drift di
-ranking residuo da risolvere. Restano le Fasi B/C/D del piano di test.
+l'installer e il ranking pesato e affinato (affinamento non ancora committato). Fase A conclusa;
+il drift di ranking è stato analizzato a fondo e in parte risolto, col residuo isolato in tre
+cause distinte (vedi domande aperte), tutte strutturali al solo BM25. Restano le Fasi B/C/D del
+piano di test.
 
 Domande aperte:
 
@@ -81,18 +85,33 @@ Domande aperte:
   filtro esclude solo la collezione "Atti normativi abrogati (in originale)". Non garantisce la
   vigenza odierna di un atto su Normattiva: vale il disclaimer. I codici integrati sono scaricati
   alla vigenza odierna ma vanno rinfrescati con `fetch_codici.py`.
-- Drift di ranking (DA RISOLVERE, Fase A accettabile ma non ottimale): misurato con
-  `scripts/benchmark_retrieval.py`. Con la pesatura rubrica/titolo recall@8 = 19/26. Due residui:
-  (a) concetti la cui parola non è nella rubrica non emergono (usura, danno ambientale, doveri
-  verso i figli); (b) rubriche omonime tra codici fanno vincere quello sbagliato (es. "diffamazione"
-  → art. 227 codici penali militari invece di 595 c.p.). Leve candidate: preferire i codici generali
-  (civile/penale) su quelli speciali a parità di rubrica; affinare i pesi; in ultima istanza ibrido
-  con embedding leggero CPU (ADR-003, Fase 4). Nel prodotto è mitigato da conoscenza + `leggi_atto`.
+- Drift di ranking (AFFINATO, non ancora committato): in `fts.py` aggiunti il filtro delle
+  stopword italiane in `to_match_query` (senza, "di"/"nel" da soli abbinavano centinaia di
+  migliaia di righe e diluivano il campione), `_rubrica_bonus` (premia le rubriche quasi
+  interamente coperte dalle parole di contenuto della domanda, es. "Furto" su "furto") e
+  `_CODICE_GENERALE_BONUS` (spareggio sui tre codici generali quando due codici condividono la
+  stessa rubrica: "diffamazione" ora risolve l'art. 595 c.p. e non più l'art. 227 dei codici
+  penali militari). Il sovra-campionamento di `search` è salito a 50x il limite, perché la
+  normalizzazione per lunghezza di BM25 può relegare l'articolo giusto ben oltre la finestra di
+  ricalcolo se il suo testo è lungo (es. "usura", art. 644 c.p., era 77° su 472 corrispondenze
+  grezze). Misurato su `scripts/benchmark_retrieval.py`: recall@1 10→13/26, recall@5 15→19/26,
+  recall@8 invariato a 19/26 ma con risultati molto più in alto in classifica. Il residuo non è
+  più un'unica causa generica ma tre isolate e diverse: rubriche nel corpus genuinamente
+  scollegate dal contenuto sostanziale dell'articolo (art. 633 c.p.c. sul decreto ingiuntivo ha
+  rubrica "Condizioni di ammissibilità", art. 128 codice del consumo sulla garanzia di conformità
+  ha rubrica "Ambito di applicazione e definizioni"); variazione di lemma non colta dal matching
+  per token esatto ("concorso" nella domanda contro "concorrono" nella rubrica dell'art. 110 c.p.);
+  un caso di diluizione estrema oltre ogni sovra-campionamento ragionevole (art. 2087 c.c., 458°
+  su quasi 79.000 corrispondenze grezze per "lavoro"/"datore"). Tutte e tre richiedono l'ibrido con
+  embedding leggero CPU (ADR-003, Fase 4): nessuna ulteriore leva lessicale su BM25 le risolve. Nel
+  prodotto il residuo resta mitigato da conoscenza del modello + `leggi_atto`.
 - Trasparenza: il `git submodule add` iniziale resta un passo del manutentore; valutare la
   distribuzione di un indice pre-costruito per saltare il bootstrap pesante al primo uso.
 
 ## Riconciliazione
 
-Ultima verifica: 2026-07-01. Tutto committato fino a `889f843` (ranking pesato, README, installer,
-fix info_corpus, corpus come clone) e schede ri-ancorate a `889f843`: contenuto allineato a HEAD,
-nessun drift documentale. Aperto solo il drift di ranking (vedi domande aperte), da risolvere.
+Ultima verifica: 2026-07-02. Codice committato fino a `09b5ec1`; l'affinamento del ranking
+descritto sopra (`fts.py`, `scripts/benchmark_retrieval.py`, `tests/test_pipeline.py`, 12 test
+verdi) non è ancora committato. Questa scheda è aggiornata in anticipo sul commit: dopo che
+l'utente esegue `git add`/`git commit`, un passo di ri-ancoraggio (skill `sync-context`) allinea
+`last-verified-commit` al nuovo hash, senza bisogno di riscrivere il contenuto.

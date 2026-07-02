@@ -118,6 +118,23 @@ def test_to_match_query_sanifica():
     assert fts.to_match_query("   ...   ") == ""  # solo punteggiatura: nessun token
 
 
+def test_to_match_query_filtra_stopword():
+    # le stopword (articoli, preposizioni) non entrano nell'OR: abbinerebbero quasi ogni riga
+    assert fts.to_match_query("il furto del bene") == '"furto" OR "bene"'
+    # domanda di sole stopword: nessun token di contenuto, si ripiega su tutti i token
+    assert fts.to_match_query("di per il") == '"di" OR "per" OR "il"'
+
+
+def test_rubrica_bonus_premia_corrispondenza_quasi_esatta():
+    query_tokens = frozenset(fts._content_tokens("reato di diffamazione"))
+    # rubrica interamente coperta dalla domanda ("Diffamazione" ⊆ "reato diffamazione")
+    assert fts._rubrica_bonus("Diffamazione", query_tokens) < 0
+    # rubrica lunga con una sola parola in comune: nessun bonus
+    rubrica_lunga = "Concorso di persone nei casi di operazioni inesistenti"
+    assert fts._rubrica_bonus(rubrica_lunga, query_tokens) == 0.0
+    assert fts._rubrica_bonus("", query_tokens) == 0.0
+
+
 def test_search_input_malformato_non_crasha():
     conn = _build_index()
     # Input che sarebbero sintassi MATCH invalida vengono sanificati, non sollevano.

@@ -56,6 +56,23 @@ quando l'indice non esiste, rimandando al bootstrap. La ricerca è robusta a inp
 passa la query per `fts.to_match_query`, che estrae i soli token e li cita come termini letterali
 in OR, così un testo non tecnico non può produrre una query MATCH invalida.
 
+Il ranking va oltre il BM25 pesato per colonna (`_BM25`: rubrica x12, titolo x3, corpo x1).
+`to_match_query` esclude anche le stopword italiane (preposizioni semplici e articolate, articoli,
+congiunzioni) dall'OR di ricerca: incluse, abbinerebbero quasi ogni riga del corpus (es. "di" da
+solo supera le centinaia di migliaia di righe) diluendo il campione su cui si calcola il
+punteggio. `search` poi ricalcola in Python il punteggio di un campione sovra-campionato (50x il
+`limit` richiesto, necessario perché la normalizzazione per lunghezza di BM25 può relegare un
+articolo pertinente ma lungo ben oltre le prime posizioni grezze) sommandovi due correttivi:
+`_rubrica_bonus`, che premia le rubriche quasi interamente coperte dalle parole di contenuto della
+domanda (il *nomen iuris* cercato, es. "Furto" quando si cerca "furto", a prescindere da parole
+generiche aggiuntive nella domanda), e `_CODICE_GENERALE_BONUS`, uno spareggio fisso sugli URN dei
+tre codici generali (civile, penale, procedura civile) che favorisce la lettura più probabile
+quando due codici condividono la stessa rubrica (es. "diffamazione" tra art. 595 c.p. e l'omonimo
+art. 227 dei codici penali militari). La colonna `score` esposta ai tool resta il BM25 grezzo di
+FTS5, metrica trasparente; l'ordinamento restituito riflette invece il punteggio corretto. Misurato
+su `scripts/benchmark_retrieval.py`: recall@1 10→13/26, recall@5 15→19/26, recall@8 invariato a
+19/26.
+
 Il package `update` gestisce l'aggiornamento incrementale (Fase 3): `corpus_revision` legge commit
 e data dell'HEAD del corpus, `pull` fa il fast-forward del submodule, `changed_files` calcola via
 `git diff` i `.md` aggiunti/modificati/cancellati fra due revisioni, `reindex_paths` ritocca
@@ -78,7 +95,9 @@ src/legal_consultant/ingest/parser.py:_split_chunks    chunking per articolo
 src/legal_consultant/ingest/parser.py:_ARTICLE_RE      regex intestazione "## Art. N."
 src/legal_consultant/index/fts.py:_DDL                 schema FTS5 (tokenizer, colonne)
 src/legal_consultant/index/fts.py:search               ricerca BM25 + filtro vigenti + sanitize
-src/legal_consultant/index/fts.py:to_match_query       testo libero → query MATCH sicura
+src/legal_consultant/index/fts.py:to_match_query       testo libero → query MATCH sicura (filtra stopword)
+src/legal_consultant/index/fts.py:_rubrica_bonus        bonus di ranking per rubrica quasi coincidente
+src/legal_consultant/index/fts.py:_CODICE_GENERALE_BONUS bonus fisso sui 3 codici generali (spareggio)
 src/legal_consultant/index/fts.py:get_act              chunk di un atto per urn/path (+ articolo)
 src/legal_consultant/index/fts.py:corpus_stats         conteggio atti e chunk indicizzati
 scripts/bootstrap_index.py:main                        prima indicizzazione completa

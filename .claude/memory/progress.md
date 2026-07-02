@@ -6,6 +6,35 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-02 — Affinamento del ranking del retrieval (stopword, bonus rubrica, bonus codici generali)
+
+Commit: (non ancora committato)
+File toccati: `src/legal_consultant/index/fts.py` (`to_match_query` filtra le stopword italiane;
+nuove `_content_tokens`, `_rubrica_bonus`, `_CODICE_GENERALE_BONUS`; `search` ricalcola il
+punteggio su un campione sovra-campionato a 50x il `limit` e riordina prima della deduplica);
+`scripts/benchmark_retrieval.py` (colonna "+bonus" che passa per `fts.search` reale);
+`tests/test_pipeline.py` (+2 test: filtro stopword, `_rubrica_bonus`). Aggiornate le schede
+`current-work.md` e `STACK.md`.
+Motivo: primo task aperto della sessione precedente, il drift di ranking di Fase A. Diagnosticato
+con query dirette sull'indice reale (non solo il benchmark aggregato): la query MATCH includeva le
+stopword, quindi "concorso di persone nel reato" abbinava 455.831 righe solo per "di"/"nel"; BM25
+penalizza le rubriche brevi ed esatte a favore di varianti più lunghe che ripetono la stessa parola
+nel corpo, e non distingue un codice generale da un suo omonimo di settore. Tre correttivi, ognuno
+verificato empiricamente col benchmark prima di tenerlo: filtro stopword nella query MATCH;
+`_rubrica_bonus` calibrato per magnitudine (i primi tentativi a -22/-9 causavano regressioni su
+query di diritto civile dove più articoli condividono rubriche brevi legittimamente simili, es.
+"Risoluzione del contratto" ricorre in più norme oltre all'art. 1453 c.c.; assestato a -8/-3);
+sovra-campionamento alzato da 5x a 50x perché il bonus non può salvare un articolo già escluso dal
+campione grezzo (l'art. 644 c.p. per "usura" era 77° su 472 corrispondenze). Risultato: recall@1
+10→13/26, recall@5 15→19/26, recall@8 invariato 19/26 ma con risultati molto più in alto in
+classifica. Isolate con query dirette le tre cause del residuo (non più un'unica "drift" generico):
+rubriche scollegate dal contenuto sostanziale (art. 633 c.p.c., art. 128 codice del consumo),
+variazione di lemma non colta dal matching per token esatto (art. 110 c.p., "concorso" vs
+"concorrono"), diluizione oltre ogni sovra-campionamento ragionevole (art. 2087 c.c., 458° su
+quasi 79.000 corrispondenze). Tutte e tre indicano l'ibrido con embedding leggero CPU (ADR-003,
+Fase 4) come prossima leva, non un ulteriore intervento lessicale su BM25. `uv run pytest` → 12
+verdi.
+
 ## 2026-07-01 — Ri-ancoraggio schede a 889f843 e chiusura sessione
 
 Commit: (schede/memoria da committare)

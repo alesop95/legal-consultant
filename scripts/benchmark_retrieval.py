@@ -77,6 +77,13 @@ def _ranked(conn, weight_expr, query):
     return out
 
 
+def _ranked_bonus(conn, query):
+    """Come `_ranked`, ma passando per `fts.search` reale: pesatura rubrica/titolo più il
+    bonus di corrispondenza rubrica e il bonus codici generali (vedi `index/fts.py`)."""
+    rows = fts.search(conn, query, limit=_TOPK, solo_vigenti=True)
+    return [(r["titolo"] or "", r["articolo"] or "") for r in rows]
+
+
 def _rank_of(results, code, art):
     for i, (titolo, articolo) in enumerate(results, 1):
         if articolo == art and code.lower() in titolo.lower():
@@ -90,23 +97,27 @@ def main() -> int:
         return 1
     conn = fts.connect(INDEX_PATH)
 
-    print(f"{'domanda':52} {'atteso':22} {'def':>4} {'pesato':>7}")
-    print("-" * 88)
-    agg = {"def": {1: 0, 5: 0, 8: 0}, "wt": {1: 0, 5: 0, 8: 0}}
+    print(f"{'domanda':52} {'atteso':22} {'def':>4} {'pesato':>7} {'+bonus':>7}")
+    print("-" * 96)
+    agg = {"def": {1: 0, 5: 0, 8: 0}, "wt": {1: 0, 5: 0, 8: 0}, "bn": {1: 0, 5: 0, 8: 0}}
     for q, code, art in GOLD:
         rd = _rank_of(_ranked(conn, _W_DEFAULT, q), code, art)
         rw = _rank_of(_ranked(conn, _W_RUBRICA, q), code, art)
-        for tag, r in (("def", rd), ("wt", rw)):
+        rb = _rank_of(_ranked_bonus(conn, q), code, art)
+        for tag, r in (("def", rd), ("wt", rw), ("bn", rb)):
             for k in (1, 5, 8):
                 if r is not None and r <= k:
                     agg[tag][k] += 1
         atteso = f"{code} art.{art}"
-        print(f"{q[:52]:52} {atteso[:22]:22} {str(rd or '-'):>4} {str(rw or '-'):>7}")
+        print(f"{q[:52]:52} {atteso[:22]:22} {str(rd or '-'):>4} {str(rw or '-'):>7} {str(rb or '-'):>7}")
 
     n = len(GOLD)
-    print("-" * 88)
+    print("-" * 96)
     for k in (1, 5, 8):
-        print(f"recall@{k}:  default {agg['def'][k]}/{n}   pesato {agg['wt'][k]}/{n}")
+        print(
+            f"recall@{k}:  default {agg['def'][k]}/{n}   pesato {agg['wt'][k]}/{n}   "
+            f"+bonus {agg['bn'][k]}/{n}"
+        )
     return 0
 
 
