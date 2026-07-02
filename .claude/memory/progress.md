@@ -6,9 +6,33 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
-## 2026-07-02 — Affinamento del ranking del retrieval (stopword, bonus rubrica, bonus codici generali)
+## 2026-07-02 — Fix del test dal vivo: sovra-campionamento legato a `limit`, bonus codici generali insufficiente
 
 Commit: (non ancora committato)
+File toccati: `src/legal_consultant/index/fts.py` (`search`: `oversample = max(limit * 50, 400)`
+invece di `limit * 50`; `_CODICE_GENERALE_BONUS` da -3/-2 a -6/-4 su civile/penale/proc. civile).
+Motivo: test dal vivo in Claude Desktop (Sonnet 4.6, ragionamento alto) col prompt di verifica
+sulle 6 query del benchmark, con `limit=1` per isolare il primo risultato (screenshot_16.png,
+screenshot_17.png). Esito: 3/6 corrette, non 5/6 come misurato dal benchmark con `limit=8`. Causa:
+il sovra-campionamento scalava linearmente su `limit` (`limit * 50`), quindi con `limit=1` la
+finestra di ricalcolo crollava a 50 righe grezze, troppo poco per recuperare l'art. 644 c.p.
+("usura", 77° grezzo) prima che il bonus potesse agire; corretto con un minimo fisso di 400,
+indipendente da quanti risultati il chiamante vuole alla fine. Trovata anche una seconda causa
+distinta: anche a campione capiente, "diffamazione" restava in prima posizione l'art. 227 dei
+codici penali militari, perché lo scarto di BM25 grezzo tra 227 e 595 (~4.6 punti, per occorrenze
+di "reato" nel corpo dell'art. 227) superava il bonus codici generali di -3; alzato a -6 per
+civile/penale, -4 per procedura civile. Rimisurato su `scripts/benchmark_retrieval.py`: recall@1
+10→14/26 (da 13), invariati recall@5 19/26 e recall@8 19/26; verificato anche con `fts.search(...,
+limit=1)` diretto sulle stesse 6 query di Claude Desktop: 5/6 corrette (solo "risoluzione del
+contratto per inadempimento" resta sbagliata, ambiguità nota tra norma generale e speciali dello
+stesso codice). Riscontro dal vivo in Claude Desktop non ancora ripetuto dopo il fix. Lezione
+operativa: il benchmark con `limit=8` non intercetta bug legati a `limit` piccoli; da qui in avanti
+vale la pena misurare anche a `limit=1` quando si cambia la logica di sovra-campionamento. `uv run
+pytest` → 12 verdi.
+
+## 2026-07-02 — Affinamento del ranking del retrieval (stopword, bonus rubrica, bonus codici generali)
+
+Commit: 995e154
 File toccati: `src/legal_consultant/index/fts.py` (`to_match_query` filtra le stopword italiane;
 nuove `_content_tokens`, `_rubrica_bonus`, `_CODICE_GENERALE_BONUS`; `search` ricalcola il
 punteggio su un campione sovra-campionato a 50x il `limit` e riordina prima della deduplica);

@@ -94,9 +94,9 @@ _BM25 = "bm25(chunks, 0,0,0,0,  3.0,   0,  1.0, 12.0,   0,   0,  1.0)"
 # pertinente. Punteggio BM25 di SQLite: più negativo È più rilevante, quindi qui i bonus
 # sono negativi.
 _CODICE_GENERALE_BONUS: dict[str, float] = {
-    "urn:nir:stato:regio.decreto:1942-03-16;262": -3.0,   # codice civile
-    "urn:nir:stato:regio.decreto:1930-10-19;1398": -3.0,  # codice penale
-    "urn:nir:stato:regio.decreto:1940-10-28;1443": -2.0,  # codice di procedura civile
+    "urn:nir:stato:regio.decreto:1942-03-16;262": -6.0,   # codice civile
+    "urn:nir:stato:regio.decreto:1930-10-19;1398": -6.0,  # codice penale
+    "urn:nir:stato:regio.decreto:1940-10-28;1443": -4.0,  # codice di procedura civile
 }
 
 
@@ -197,15 +197,18 @@ def search(
     bonus premia le rubriche quasi esattamente coincidenti con la domanda e i codici
     fondamentali generali sugli omonimi di settore. La colonna `score` restituita resta il
     BM25 grezzo di FTS5 (metrica trasparente), l'ordinamento invece riflette il punteggio
-    corretto. Il sovra-campionamento è ampio (50x) perché la normalizzazione per lunghezza
-    di BM25 può relegare l'articolo giusto ben oltre le prime posizioni grezze quando il suo
-    testo è lungo (es. "usura" risultava 77° su 472 corrispondenze prima del bonus): un
-    campione stretto lo escluderebbe dal ricalcolo prima ancora che il bonus possa agire.
+    corretto. Il sovra-campionamento è ampio (50x, con un minimo di 400) perché la
+    normalizzazione per lunghezza di BM25 può relegare l'articolo giusto ben oltre le prime
+    posizioni grezze quando il suo testo è lungo (es. "usura" risultava 77° su 472
+    corrispondenze prima del bonus): un campione stretto lo escluderebbe dal ricalcolo prima
+    ancora che il bonus possa agire. Il minimo fisso serve perché un chiamante con `limit=1`
+    (per isolare il primo risultato) non deve restringere la finestra di ricalcolo: la
+    dimensione del campione da correggere è indipendente da quanti risultati servono alla fine.
     """
     match = to_match_query(query) if sanitize else query
     if not match:
         return []
-    oversample = limit * 50 if dedup else limit
+    oversample = max(limit * 50, 400) if dedup else limit
     sql = [
         "SELECT urn, tipo, numero, data, titolo, collezione, articolo, rubrica, vigente, path,",
         f"       snippet(chunks, {_COL_TESTO}, '[', ']', ' … ', 16) AS estratto,",

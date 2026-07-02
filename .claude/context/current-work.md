@@ -66,18 +66,26 @@ Definition of done:
 - [x] installer "un clic" (`install.cmd`/`install.ps1`): git+uv se mancano, longpaths, setup, registrazione
 - [x] Fase A benchmark retrieval (`scripts/benchmark_retrieval.py`) + pesatura BM25 rubrica/titolo
       adottata (recall@8 15/26 → 19/26)
-- [x] affinamento del ranking (non ancora committato): filtro stopword italiane in
+- [x] affinamento del ranking (committato in `995e154`): filtro stopword italiane in
       `to_match_query`, `_rubrica_bonus` (corrispondenza rubrica-domanda) e
       `_CODICE_GENERALE_BONUS` (spareggio sui codici generali) in `fts.search`, sovra-campionamento
       a 50x (recall@1 10→13/26, recall@5 15→19/26; vedi domande aperte per il residuo)
+- [x] fix del test dal vivo (non ancora committato): il test in Claude Desktop (screenshot, 6
+      query con `limit=1`) ha dato solo 3/6 corrette, scoprendo un bug non colto dal benchmark
+      (`limit=8`): il sovra-campionamento scalava su `limit`, e con `limit=1` (usato da Claude
+      Desktop per isolare il primo risultato) la finestra di ricalcolo crollava a sole 50 righe;
+      corretto con un minimo fisso di 400. Bonus codici generali alzato da -3/-2 a -6/-4 per
+      risolvere anche "diffamazione" in prima posizione, non solo in top-8. Dopo il fix, recall@1
+      10→14/26; con `limit=1` esatto 5/6 corrette via `fts.search` diretto, riscontro dal vivo in
+      Claude Desktop non ancora ripetuto.
 - [ ] Fase B: Project "Consulente Legale" + batteria di domande dal vivo in Claude Desktop
 - [ ] prova dell'installer su una situazione pulita (Fase C); prova aggiornamento (Fase D)
 
 Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali,
-l'installer e il ranking pesato e affinato (affinamento non ancora committato). Fase A conclusa;
-il drift di ranking è stato analizzato a fondo e in parte risolto, col residuo isolato in tre
-cause distinte (vedi domande aperte), tutte strutturali al solo BM25. Restano le Fasi B/C/D del
-piano di test.
+l'installer e il ranking pesato e affinato (`995e154`). Un secondo fix, trovato dal test dal vivo
+subito dopo quel commit, non è ancora committato. Fase A conclusa; il drift di ranking è stato
+analizzato a fondo e in parte risolto, col residuo isolato in quattro cause distinte (vedi domande
+aperte), tutte strutturali al solo BM25. Restano le Fasi B/C/D del piano di test.
 
 Domande aperte:
 
@@ -85,33 +93,47 @@ Domande aperte:
   filtro esclude solo la collezione "Atti normativi abrogati (in originale)". Non garantisce la
   vigenza odierna di un atto su Normattiva: vale il disclaimer. I codici integrati sono scaricati
   alla vigenza odierna ma vanno rinfrescati con `fetch_codici.py`.
-- Drift di ranking (AFFINATO, non ancora committato): in `fts.py` aggiunti il filtro delle
+- Drift di ranking (AFFINATO, primo giro committato in `995e154`, fix del test dal vivo pendente):
+  in `fts.py` aggiunti il filtro delle
   stopword italiane in `to_match_query` (senza, "di"/"nel" da soli abbinavano centinaia di
   migliaia di righe e diluivano il campione), `_rubrica_bonus` (premia le rubriche quasi
   interamente coperte dalle parole di contenuto della domanda, es. "Furto" su "furto") e
   `_CODICE_GENERALE_BONUS` (spareggio sui tre codici generali quando due codici condividono la
   stessa rubrica: "diffamazione" ora risolve l'art. 595 c.p. e non più l'art. 227 dei codici
-  penali militari). Il sovra-campionamento di `search` è salito a 50x il limite, perché la
-  normalizzazione per lunghezza di BM25 può relegare l'articolo giusto ben oltre la finestra di
-  ricalcolo se il suo testo è lungo (es. "usura", art. 644 c.p., era 77° su 472 corrispondenze
-  grezze). Misurato su `scripts/benchmark_retrieval.py`: recall@1 10→13/26, recall@5 15→19/26,
-  recall@8 invariato a 19/26 ma con risultati molto più in alto in classifica. Il residuo non è
-  più un'unica causa generica ma tre isolate e diverse: rubriche nel corpus genuinamente
+  penali militari, bonus a -6/-4 dopo che -3/-2 non bastava a rompere il pareggio in prima
+  posizione). Il sovra-campionamento di `search` è salito a 50x il limite con un minimo fisso di
+  400, perché la normalizzazione per lunghezza di BM25 può relegare l'articolo giusto ben oltre la
+  finestra di ricalcolo se il suo testo è lungo (es. "usura", art. 644 c.p., era 77° su 472
+  corrispondenze grezze) e perché un `limit` piccolo (Claude Desktop chiama con `limit=1` per
+  isolare il primo risultato) non deve restringere la finestra di ricalcolo. Misurato su
+  `scripts/benchmark_retrieval.py`: recall@1 10→14/26, recall@5 15→19/26, recall@8 invariato a
+  19/26 ma con risultati molto più in alto in classifica; verificato con `fts.search(...,
+  limit=1)` diretto sulle stesse 6 query usate dal test dal vivo in Claude Desktop (furto,
+  omicidio, usura, diffamazione, truffa, risoluzione contratto): 5/6 corrette dopo il fix del
+  sovra-campionamento (3/6 prima del fix, riscontrato nel test dal vivo). Il riscontro dal vivo in
+  Claude Desktop dopo il fix non è ancora stato ripetuto. Il residuo non è più un'unica causa
+  generica ma quattro isolate e diverse: rubriche nel corpus genuinamente
   scollegate dal contenuto sostanziale dell'articolo (art. 633 c.p.c. sul decreto ingiuntivo ha
   rubrica "Condizioni di ammissibilità", art. 128 codice del consumo sulla garanzia di conformità
   ha rubrica "Ambito di applicazione e definizioni"); variazione di lemma non colta dal matching
   per token esatto ("concorso" nella domanda contro "concorrono" nella rubrica dell'art. 110 c.p.);
   un caso di diluizione estrema oltre ogni sovra-campionamento ragionevole (art. 2087 c.c., 458°
-  su quasi 79.000 corrispondenze grezze per "lavoro"/"datore"). Tutte e tre richiedono l'ibrido con
-  embedding leggero CPU (ADR-003, Fase 4): nessuna ulteriore leva lessicale su BM25 le risolve. Nel
+  su quasi 79.000 corrispondenze grezze per "lavoro"/"datore"); e un'ambiguità genuina tra norma
+  generale e norme speciali nello stesso codice ("risoluzione del contratto per inadempimento" →
+  art. 1564 c.c., su una vendita a consegne ripartite, invece dell'art. 1453 c.c., la norma
+  generale: la sua rubrica usa il sinonimo tecnico "Risolubilità" mentre più norme speciali dello
+  stesso codice si intitolano letteralmente "Risoluzione del contratto", vincendo il matching
+  lessicale). Tutte e quattro richiedono l'ibrido con embedding leggero CPU (ADR-003, Fase 4):
+  nessuna ulteriore leva lessicale su BM25 le risolve senza rischiare nuove regressioni (un bonus
+  più aggressivo su "Risoluzione del contratto" premierebbe di nuovo le norme speciali). Nel
   prodotto il residuo resta mitigato da conoscenza del modello + `leggi_atto`.
 - Trasparenza: il `git submodule add` iniziale resta un passo del manutentore; valutare la
   distribuzione di un indice pre-costruito per saltare il bootstrap pesante al primo uso.
 
 ## Riconciliazione
 
-Ultima verifica: 2026-07-02. Codice committato fino a `09b5ec1`; l'affinamento del ranking
-descritto sopra (`fts.py`, `scripts/benchmark_retrieval.py`, `tests/test_pipeline.py`, 12 test
-verdi) non è ancora committato. Questa scheda è aggiornata in anticipo sul commit: dopo che
-l'utente esegue `git add`/`git commit`, un passo di ri-ancoraggio (skill `sync-context`) allinea
-`last-verified-commit` al nuovo hash, senza bisogno di riscrivere il contenuto.
+Ultima verifica: 2026-07-02. Codice committato fino a `995e154` (primo affinamento del ranking); il
+fix del test dal vivo descritto sopra (`fts.py`, 12 test verdi) non è ancora committato. Questa
+scheda è aggiornata oltre `995e154`: dopo che l'utente esegue `git add`/`git commit` sul fix, un
+passo di ri-ancoraggio (skill `sync-context`) allinea `last-verified-commit` al nuovo hash, senza
+bisogno di riscrivere il contenuto.
