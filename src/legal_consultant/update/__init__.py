@@ -1,8 +1,9 @@
 """Aggiornamento del corpus e reindicizzazione incrementale (Fase 3).
 
-Il corpus e' un submodule git: aggiornarlo e' un `git pull`, e reindicizzare significa
-ritoccare nell'indice FTS5 i soli atti cambiati fra la vecchia e la nuova revisione,
-non ricostruire tutto. Le funzioni qui sono divise fra logica pura, testabile sulle
+Il corpus e' un clone locale ignorato da git (non un submodule): aggiornarlo e' un
+fetch + reset all'ultimo commit del remoto, e reindicizzare significa ritoccare
+nell'indice FTS5 i soli atti cambiati fra la vecchia e la nuova revisione, non
+ricostruire tutto. Le funzioni qui sono divise fra logica pura, testabile sulle
 fixture (`reindex_paths`, lettura/scrittura dello stato), e interazione con git
 (`corpus_revision`, `changed_files`, `pull`), che richiede un repo reale.
 """
@@ -47,8 +48,18 @@ def corpus_revision(corpus_root: str | Path) -> tuple[str | None, str | None]:
 
 
 def pull(corpus_root: str | Path) -> None:
-    """Aggiorna il corpus all'ultimo commit del remoto, solo fast-forward."""
-    _git(corpus_root, "pull", "--ff-only")
+    """Allinea il corpus all'ultimo commit del remoto con fetch + reset --hard,
+    scartando qualunque modifica locale invece di un semplice `git pull --ff-only`.
+
+    Necessario perche' il corpus e' un mirror locale di sola lettura, mai editato a
+    mano, e su un filesystem case-insensitive come quello di Windows alcuni path del
+    corpus che differiscono solo per maiuscole/minuscole collidono fisicamente sullo
+    stesso file: il checkout lascia quindi sempre alcune voci "modificate" rispetto
+    all'indice, anche subito dopo un checkout pulito. Un `pull --ff-only` fallirebbe
+    ad ogni aggiornamento scambiando questo rumore strutturale per una modifica reale
+    da proteggere; fetch + reset --hard lo ignora, come e' corretto per un mirror."""
+    _git(corpus_root, "fetch", "--depth", "1")
+    _git(corpus_root, "reset", "--hard", "@{u}")
 
 
 def changed_files(
