@@ -6,6 +6,66 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-03 — Fase D chiusa: fetch_codici.py verificato, piano di test completo
+
+Commit: nessuno (pendente). File toccati in questa voce: `.claude/context/current-work.md`
+(chiusura Fase D, pulizia di due note obsolete: riferimento residuo al submodule git, e
+riconciliazione).
+Motivo: rilanciato `scripts/fetch_codici.py`, confermato esplicitamente dall'utente prima
+dell'esecuzione perché contatta Normattiva e uno strumento di terze parti (`normattiva2md` via
+`uvx`). Riscaricati tutti e 5 i codici fondamentali alla vigenza odierna (2026-07-03); `git diff`
+non rileva alcuna differenza rispetto ai file già tracciati, segno che questi codici non hanno
+subito modifiche legislative dal 30 giugno, non un difetto dello script: conferma che il fetch è
+deterministico e riproducibile. Nessun reindex necessario. Con questo si chiude l'intero piano di
+test (Fasi B, C, D); resta come backlog non urgente il solo ibrido con embedding (Fase 4,
+ADR-003) per le tre cause di ranking isolate in Fase A e non riverificate dal vivo.
+
+## 2026-07-03 — Fase D: fix di update_corpus.py su collisione di case Windows
+
+Commit: nessuno (pendente). File toccati: `src/legal_consultant/update/__init__.py` (`pull()` e
+docstring del modulo).
+Motivo: primo lancio di `scripts/update_corpus.py` fallito su `git pull --ff-only`, rifiutato per
+"modifiche locali" nel clone del corpus. Diagnosi: il corpus contiene, nella stessa revisione,
+path che differiscono solo per maiuscole/minuscole (verificato con
+`git ls-tree -r --name-only HEAD | tolower | sort | uniq -d`, trovate collisioni reali, es. due
+varianti di "...dell'Ente nazionale idrocarburi.md"); su Windows, con `core.ignorecase=true` di
+default, il checkout dell'uno sovrascrive fisicamente l'altro sullo stesso file, lasciando sempre
+alcune voci "modificate" rispetto all'indice. Confermato empiricamente su richiesta esplicita
+dell'utente (comando `git reset --hard HEAD` lanciato dall'utente stesso con `!`, bloccato per me
+dal deny di `.claude/settings.json` su reset/rebase): 357 file modificati prima, 357 modificati
+(nomi in parte diversi) subito dopo un reset pulito. Non e' un problema di questa sessione ne' un
+bug transitorio: e' una proprieta' strutturale del corpus su Windows, che avrebbe fatto fallire
+`update_corpus.py` a ogni futuro aggiornamento. Corretta `update.pull()`: da `git pull --ff-only`
+a `git fetch --depth 1` + `git reset --hard @{u}`, che scarta sempre le modifiche locali invece di
+proteggerle, corretto per un mirror locale di sola lettura mai editato a mano. Corretta anche la
+docstring del modulo, che citava ancora erroneamente un submodule git. Ritestato con successo:
+`def703b2 -> 086a90b8: 1010 atti aggiornati, 0 rimossi, 21.877 chunk reinseriti`; 12 test verdi;
+corpus avanzato al commit del 2026-07-03.
+
+## 2026-07-03 — Fase C: installer verificato su macchina già attiva + raffinamento istruzioni
+
+Commit: `1da975d` (raffinamento istruzioni e diagramma; l'esecuzione dell'installer non tocca
+codice). File toccati in questa voce: `.claude/context/current-work.md`.
+Motivo: prima del lancio, corretto un refuso non di questa sessione in `prompts/consulente-legale.md`
+(backtick mancante, paragrafi ri-scritti su riga unica) e raffinate le istruzioni del Project e il
+prompt gemello `consulenza_legale` in `mcp_server.py`: aggiunta la richiesta di chiedere un
+chiarimento quando la domanda copre discipline/procedure distinte (formalizza il comportamento
+osservato nella domanda 8 di Fase B) e di riportare il testo letterale delle disposizioni brevi tra
+virgolette oltre alla sintesi, pensato per uno studio legale che deve poter citare alla lettera.
+Aggiunto anche un diagramma di flusso as-built in `HANDOFF.md` (Mermaid, sezione 4.1). Eseguito poi
+`install.ps1` su questa macchina, già configurata e con Claude Desktop chiuso per il test: rileva
+git/uv presenti, salta il download del corpus, ricostruisce l'indice da zero (287.816 atti, 966.126
+chunk, 23 errori noti, 418s contro i 744s storici), preserva gli altri due server MCP nel config di
+Claude Desktop con backup automatico, registra `legge-it`. Effetto collaterale noto: `uv sync` senza
+`--extra dev` rimuove `pytest` (corretto per l'utente finale; ripristinato qui con
+`uv sync --extra dev`, 12 test verdi). Validazione end-to-end dopo il riavvio di Claude Desktop: una
+domanda di sintesi complessa (comunione vs separazione dei beni nel matrimonio) ha prodotto una
+trattazione con citazione letterale sistematica di ogni articolo (artt. 159-219, 2647 c.c.), tabella
+comparativa, sezione operativa "quando conviene ciascun regime", e una dichiarazione esplicita e
+corretta del limite del corpus (solo testo legislativo, non giurisprudenza) sul fondo patrimoniale.
+Fase C chiusa con esito pienamente positivo; il raffinamento delle istruzioni si conferma efficace
+su un caso reale, non solo sulla batteria sintetica di Fase B.
+
 ## 2026-07-03 — Fase B conclusa: batteria di domande 8/8 superate
 
 Commit: nessuno (verifica manuale in Claude Desktop, nessun file di codice toccato).

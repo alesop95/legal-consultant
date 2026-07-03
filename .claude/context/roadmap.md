@@ -24,12 +24,14 @@ citazioni verificabili.
 2. Fase 2 — Server MCP "legge-it" (`cerca_normativa`, `leggi_atto`, `info_corpus`). Fatta e testata
    su fixture, con hardening della ricerca e prompt MCP delle istruzioni. ADR-002 (server MCP
    locali sul piano Team) risolto in positivo: la stessa macchina usa già `obsidian-vaults`.
-3. Fase 3 — Aggiornamento automatico (git pull + reindex incrementale via git diff). Codice fatto
-   (package `update` + `scripts/update_corpus.py`); resta da schedulare con Task Scheduler e da
-   validare sul corpus reale.
+3. Fase 3 — Aggiornamento automatico (fetch + reset incrementale). Codice fatto e validato sul
+   corpus reale (Fase D): un limite strutturale del corpus su Windows (collisione di path per
+   case) ha richiesto di sostituire `git pull --ff-only` con fetch + reset --hard in
+   `update.pull()`. Resta solo, se utile, schedulare l'esecuzione con Task Scheduler.
 4. Packaging trasparente — registrazione versionata in `.mcp.json` (Claude Code), setup a un
    comando (`scripts/setup.py`), istruzioni e disclaimer (`prompts/consulente-legale.md` + prompt
-   MCP). Fatto a livello di codice; resta la verifica end-to-end nei due client sul corpus reale.
+   MCP). Fatto e verificato end-to-end nei due client sul corpus reale (Fase B/C), incluso il
+   riavvio dell'installer su una macchina già configurata.
 5. Fase 4+ — Backlog: ricerca ibrida con embedding leggero CPU se il recall lessicale non basta;
    diritto UE (EUR-Lex); anonimizzazione opzionale pre-invio; indice pre-costruito distribuibile
    per saltare il bootstrap pesante al primo uso.

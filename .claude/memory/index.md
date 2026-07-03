@@ -67,16 +67,27 @@ contratto" → art. 1564 c.c. invece della norma generale art. 1453 c.c.). Tutte
 richiedono l'ibrido con embedding leggero CPU (ADR-003, Fase 4): nessun'altra leva lessicale su
 BM25 le risolve senza rischiare nuove regressioni. Non sono bloccanti per l'uso quotidiano.
 
-Prossime azioni, in ordine. Ri-ancoraggio delle schede a `f7a4da9` fatto in sessione precedente.
-Fase B conclusa: Project "Consulente legale" creato in Claude Desktop con le istruzioni di
-`prompts/consulente-legale.md`, tool `legge-it` collegato e confermato in uso. Batteria di otto
-domande dal vivo: 8/8 superate (dettaglio in `current-work.md` e nel work-log del 2026-07-02/03),
-incluse due conferme che le istruzioni del Project risolvono in pratica due dei quattro casi
-critici residui di Fase A senza l'ibrido con embedding, e un uso corretto e trasparente di
-`info_corpus` e della dichiarazione di assenza dal corpus. Primo, ora: l'utente committa la
-registrazione dei risultati di Fase B (`current-work.md`, `memory/index.md`, `memory/progress.md`).
-Poi (Fasi C/D): provare `install.cmd` su una macchina/utente pulito; provare `update_corpus.py`
-(aggiornamento incrementale). Infine, solo se serve ancora: valutare l'ibrido con embedding (Fase
-4, ADR-003) per le quattro cause residue di ranking, che restano isolate ma non bloccanti. Nota:
-dopo `git pull` o modifiche, rilanciare `sync-context`. Ogni modifica a `fts.py`/`mcp_server.py`
-richiede il riavvio di Claude Desktop (anche dalla tray) per essere caricata dal server.
+Prossime azioni, in ordine. Fase B conclusa (8/8, commit `d8ca083`). Raffinate le istruzioni del
+Project e il prompt gemello `consulenza_legale` (chiarimento su domande multi-disciplina, citazione
+letterale delle disposizioni brevi) e aggiunto un diagramma di flusso as-built a `HANDOFF.md`
+(commit `1da975d`). Fase C conclusa: `install.ps1` verificato su questa macchina già attiva (non
+vergine), indice ricostruito correttamente (287.816 atti, 966.126 chunk, 418s), altri server MCP
+preservati, validazione end-to-end su una domanda di sintesi complessa con citazione letterale
+sistematica e dichiarazione corretta dei limiti del corpus. Effetto collaterale noto e non
+bloccante: l'installer rimuove `pytest` su una macchina di sviluppo (`uv sync` senza `--extra dev`),
+ripristinato manualmente qui. Fase D chiusa: `update_corpus.py` fallito al primo lancio su un limite strutturale del corpus mai
+emerso prima (collisione di path che differiscono solo per case, incompatibile con
+`core.ignorecase=true` di Windows), corretto in `update.pull()` (fetch + reset --hard invece di
+pull --ff-only) e ritestato con successo (1010 atti aggiornati, corpus avanzato a `086a90b8`, 12
+test verdi). `fetch_codici.py` ritestato: 5/5 codici riscaricati alla vigenza odierna, nessuna
+differenza rispetto ai file tracciati (nessuna modifica legislativa nel periodo, non un difetto).
+Con questo l'intero piano di test (Fasi B, C, D) è chiuso. Codice e schede pendenti da committare.
+Primo, ora: l'utente committa (`src/legal_consultant/update/__init__.py`, `current-work.md`,
+`memory/index.md`, `memory/progress.md`, più i pendenti di Fase C: `HANDOFF.md`,
+`prompts/consulente-legale.md`, `src/legal_consultant/mcp_server.py`). Poi, solo se serve: valutare
+l'ibrido con embedding (Fase 4, ADR-003) per le tre cause residue di ranking non riverificate dal
+vivo (rubrica scollegata art. 633 c.p.c., variazione di lemma art. 110 c.p., diluizione art. 2087
+c.c.), isolate ma non bloccanti — nessuna urgenza, il prodotto è completo e verificato end-to-end
+su tutte le fasi pianificate. Nota: dopo `git pull` o modifiche, rilanciare `sync-context`. Ogni
+modifica a `fts.py`/`mcp_server.py` richiede il riavvio di Claude Desktop (anche dalla tray) per
+essere caricata dal server.

@@ -86,14 +86,44 @@ Definition of done:
       testo e disclaimer coincidenti), tool `legge-it` collegato e confermato in uso ("Usata
       integrazione legge-it" su ogni risposta)
 - [x] Fase B, batteria di domande dal vivo: 8/8 completate, tutte superate (dettaglio sotto)
-- [ ] prova dell'installer su una situazione pulita (Fase C); prova aggiornamento (Fase D)
+- [x] Fase C: `install.ps1` rilanciato su questa macchina, già configurata e attiva (non
+      vergine): rileva git/uv presenti, salta il download del corpus già clonato, ricostruisce
+      l'indice da zero (287.816 atti, 966.126 chunk, 23 errori noti, 418s), preserva gli altri
+      server MCP nel config di Claude Desktop con backup automatico `.json.bak`, registra
+      `legge-it` correttamente. Unico effetto collaterale noto: `uv sync` senza `--extra dev`
+      rimuove `pytest` dall'ambiente (corretto per una macchina utente finale, da ripristinare
+      con `uv sync --extra dev` su una macchina di sviluppo). Validazione end-to-end dopo il
+      riavvio: domanda di sintesi complessa (comunione vs separazione dei beni) risolta con
+      citazione letterale sistematica di tutti gli articoli (artt. 159-219, 2647 c.c.), tabella
+      comparativa, sezione "quando conviene ciascun regime", e dichiarazione esplicita del
+      limite del corpus (solo testo legislativo, non giurisprudenza) sul fondo patrimoniale —
+      conferma che il raffinamento delle istruzioni (citazione letterale) regge su un caso reale
+      complesso, non solo sulla batteria di Fase B.
+- [x] Fase D, `update_corpus.py`: primo lancio fallito (`git pull --ff-only` rifiutato per
+      "modifiche locali"), diagnosticata una causa strutturale non nota prima, non un errore di
+      sessione: il corpus contiene, nella stessa revisione, path che differiscono solo per
+      maiuscole/minuscole (es. due file distinti su un filesystem case-sensitive Linux/macOS),
+      che su Windows (`core.ignorecase=true`) collidono fisicamente sullo stesso file; confermato
+      empiricamente che nemmeno un `git reset --hard` converge a uno stato pulito (357 file
+      "modificati" prima e dopo, in modo riproducibile). Corretta `update.pull()` in
+      `src/legal_consultant/update/__init__.py`: da `git pull --ff-only` (che fallirebbe sempre)
+      a `git fetch --depth 1` + `git reset --hard @{u}`, corretto per un mirror locale di sola
+      lettura mai editato a mano. Ritestato con successo: `def703b2 -> 086a90b8: 1010 atti
+      aggiornati, 0 rimossi, 21.877 chunk reinseriti`; 12 test verdi.
+- [x] Fase D, `fetch_codici.py`: rilanciato, ha riscaricato da Normattiva tutti e 5 i codici alla
+      vigenza odierna (2026-07-03); `git diff` non rileva alcuna differenza rispetto ai file già
+      tracciati (nessuna modifica legislativa su questi codici dal 30 giugno), risultato atteso e
+      non un difetto: conferma che il fetch è deterministico e riproducibile. Nessun reindex
+      necessario. Fase D chiusa: entrambi gli script del piano di aggiornamento verificati.
 
 Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali,
 l'installer e il ranking pesato, affinato e corretto (`995e154`, `0d0667a`), riconfermato dal vivo
 in Claude Desktop dopo il fix (5/6, screenshot_01.png). Fase A conclusa; il drift di ranking è
 stato analizzato a fondo e risolto per quanto possibile su base lessicale, col residuo isolato in
-quattro cause distinte (vedi domande aperte), tutte strutturali al solo BM25. Fase B conclusa (vedi
-sotto). Restano le Fasi C/D del piano di test.
+quattro cause distinte (vedi domande aperte), tutte strutturali al solo BM25. Fasi B, C e D
+concluse (vedi sotto): l'intero piano di test è chiuso. Resta solo, come backlog non urgente,
+l'eventuale ibrido con embedding (Fase 4, ADR-003) per le tre cause di ranking non riverificate
+dal vivo.
 
 Fase B — risultati della batteria di domande (2026-07-02/03, 8/8 completate, tutte superate). Project
 "Consulente legale" creato in Claude Desktop con le istruzioni di `prompts/consulente-legale.md`
@@ -182,13 +212,20 @@ Domande aperte:
   nessuna ulteriore leva lessicale su BM25 le risolve senza rischiare nuove regressioni (un bonus
   più aggressivo su "Risoluzione del contratto" premierebbe di nuovo le norme speciali). Nel
   prodotto il residuo resta mitigato da conoscenza del modello + `leggi_atto`.
-- Trasparenza: il `git submodule add` iniziale resta un passo del manutentore; valutare la
+- Trasparenza: il corpus è un clone locale ignorato da git (non un submodule, decisione già presa
+  e superata rispetto alla nota storica che citava `git submodule add`); valutare comunque la
   distribuzione di un indice pre-costruito per saltare il bootstrap pesante al primo uso.
+- Collisione di case del corpus su Windows (nuovo, Fase D): il corpus contiene path che
+  differiscono solo per maiuscole/minuscole, incompatibili con un checkout perfetto su un
+  filesystem case-insensitive. Mitigato in `update.pull()` (fetch + reset --hard invece di
+  pull --ff-only), ma resta una proprietà strutturale del corpus upstream: se in futuro il numero
+  di collisioni crescesse, `git status` nel clone del corpus continuerà a mostrare voci
+  "modificate" che sono rumore atteso, non un segnale di corruzione.
 
 ## Riconciliazione
 
-Ultima verifica: 2026-07-02. Codice committato fino a `0d0667a` (affinamento del ranking in
-`995e154`, fix del test dal vivo in `0d0667a`), confermato dal vivo in Claude Desktop dopo il
-riavvio (5/6, screenshot_01.png). Questa scheda è aggiornata oltre l'ultimo commit solo per
-registrare l'esito della conferma dal vivo: un passo di ri-ancoraggio (skill `sync-context`)
-allineerà `last-verified-commit` a `0d0667a` al prossimo commit di questa scheda.
+Ultima verifica: 2026-07-03. Codice committato fino a `1da975d` (raffinamento istruzioni e
+diagramma di flusso); Fasi B, C e D del piano di test chiuse in questa sessione, con un fix di
+prodotto (`update.pull()`) ancora da committare insieme alla registrazione dei risultati. Un passo
+di ri-ancoraggio (skill `sync-context`) allineerà `last-verified-commit` all'hash del prossimo
+commit.
