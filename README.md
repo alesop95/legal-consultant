@@ -28,14 +28,36 @@ articoli con il loro URN, dal corpus locale, senza ricorso al web. Vedi
 
 ### Windows, un clic (consigliata per l'uso finale)
 
-Ottenuta la cartella del progetto, fare doppio clic su **`install.cmd`**. Lo script, senza
-privilegi di amministratore, installa `git` e `uv` se mancano, configura git per i percorsi
-lunghi (i nomi-file del corpus superano i 260 caratteri di Windows), scarica il corpus,
-costruisce l'indice e registra il server `legge-it` in Claude Desktop preservando gli altri
-server. La prima esecuzione dura qualche minuto (download del corpus e indicizzazione).
+Prerequisito: Claude Desktop già installato (piano Team). Non serve altro software
+preesistente: né Python, né git, né conoscenze tecniche.
+
+Per procurarsi il progetto senza usare git, sulla pagina GitHub del repository si preme il
+pulsante verde **Code**, poi **Download ZIP**, e si estrae lo ZIP scaricato in una cartella a
+piacere. Fatto questo, doppio clic su **`install.cmd`** dentro quella cartella.
+
+Lo script, senza privilegi di amministratore, installa `git` e `uv` se mancano, configura git
+per i percorsi lunghi (i nomi-file del corpus superano i 260 caratteri di Windows), scarica il
+corpus, costruisce l'indice e registra il server `legge-it` in Claude Desktop preservando gli
+altri server. La prima esecuzione richiede una connessione internet e dura tipicamente 15-20
+minuti (il tempo dipende dalla velocità della connessione e dal disco): la maggior parte è
+download del corpus (circa 2 GB) e costruzione dell'indice. Si apre una finestra nera con
+scritte tecniche in inglese e italiano: è normale, non richiede di leggerla né di intervenire,
+va solo lasciata finire.
+
+Se Windows mostra un avviso blu **"Windows ha protetto il PC"** (SmartScreen, tipico sui
+portatili aziendali con antivirus gestito dall'IT), è perché lo script è scaricato da internet
+e non firmato digitalmente, non perché sia dannoso: si sceglie **Ulteriori informazioni** e poi
+**Esegui comunque**. In caso di dubbio, verificare con il proprio reparto IT prima di procedere.
+
+Se qualcosa va storto a metà (connessione caduta, PC spento), si può rilanciare `install.cmd`
+tutte le volte che serve: riprende da dove serve senza ripetere i passi già completati (per
+esempio non riscarica il corpus se è già presente) e non danneggia nulla.
 
 Al termine: chiudere **del tutto** Claude Desktop (anche dall'icona nella tray vicino
-all'orologio) e riaprirlo.
+all'orologio) e riaprirlo. Per verificare che tutto funzioni, fare una domanda di diritto
+italiano qualsiasi (per esempio "quali sono i termini di prescrizione per il reato di
+omicidio?"): la risposta deve citare gli articoli con il loro riferimento normativo (URN) e
+chiudersi con un disclaimer.
 
 ### Manuale (sviluppatori, o altri OS)
 

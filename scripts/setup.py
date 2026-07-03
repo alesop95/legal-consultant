@@ -14,6 +14,7 @@ codici fondamentali e' gia' versionato nel repo (data/codici-extra), quindi non 
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -29,7 +30,25 @@ def _run(cmd: list[str]) -> None:
 
 
 def _corpus_presente(corpus: Path) -> bool:
-    return corpus.is_dir() and any(corpus.iterdir())
+    """True solo se esiste un clone completo e valido, non una cartella qualunque.
+
+    Un controllo di sola non-vuotezza accetterebbe anche un clone interrotto a meta'
+    (per esempio da una connessione caduta durante il primo setup): la cartella
+    esisterebbe gia' con dentro un `.git` parziale, un rilancio salterebbe il download
+    pensando che il corpus sia pronto, e il bootstrap indicizzerebbe pochissimi file
+    senza un errore chiaro. `git rev-parse HEAD` riesce solo su un repository con
+    almeno un commit effettivamente estratto.
+    """
+    if not corpus.is_dir() or not any(corpus.iterdir()):
+        return False
+    try:
+        subprocess.run(
+            ["git", "-C", str(corpus), "rev-parse", "HEAD"],
+            check=True, capture_output=True, cwd=str(REPO_ROOT),
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return False
+    return True
 
 
 def main() -> int:
@@ -39,12 +58,23 @@ def main() -> int:
     if _corpus_presente(corpus):
         print(f"Corpus gia' presente in {corpus}, salto il download.")
     else:
+        if corpus.is_dir() and any(corpus.iterdir()):
+            print(f"Trovato un clone incompleto o corrotto in {corpus}, lo rimuovo e riprovo.")
+            shutil.rmtree(corpus)
         # Clone shallow. -c core.longpaths=true: i nomi-file lunghi del corpus superano
         # il limite di 260 caratteri di Windows; fa usare a git le API estese, senza admin.
         _run(["git", "-c", "core.longpaths=true", "clone", "--depth", "1",
               _CORPUS_URL, str(corpus)])
         # Persiste l'impostazione nel clone, cosi' anche i pull futuri estraggono i path lunghi.
         _run(["git", "-C", str(corpus), "config", "core.longpaths", "true"])
+        # Identita' locale placeholder, scoped al solo clone del corpus (mai --global):
+        # il clone e' di sola lettura e non fa mai un commit, ma alcune versioni di git
+        # rifiutano operazioni non banali senza un'identita' configurata. Un utente non
+        # tecnico non avrebbe modo di rispondere a una richiesta di credenziali: meglio
+        # non lasciare la possibilita' che si presenti. Non tocca l'identita' globale
+        # dell'utente, ne' richiede un vero account.
+        _run(["git", "-C", str(corpus), "config", "user.name", "legal-consultant-bot"])
+        _run(["git", "-C", str(corpus), "config", "user.email", "legal-consultant@localhost"])
 
     print("\n== 2/3 Ambiente ==")
     _run(["uv", "sync"])
