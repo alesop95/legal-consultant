@@ -115,6 +115,21 @@ Definition of done:
       tracciati (nessuna modifica legislativa su questi codici dal 30 giugno), risultato atteso e
       non un difetto: conferma che il fetch è deterministico e riproducibile. Nessun reindex
       necessario. Fase D chiusa: entrambi gli script del piano di aggiornamento verificati.
+- [x] Hardening "scatola chiusa" per l'utente non tecnico (avvocato/studio legale), in preparazione
+      della Fase C su macchina vergine: `README.md` ora spiega come procurarsi il progetto senza
+      git (Download ZIP da GitHub), avverte del possibile blocco SmartScreen su script non firmati
+      e di come sbloccarlo, dà un'aspettativa di durata (15-20 minuti) e un passo di verifica
+      finale con domanda di prova. Corretto un bug reale in `scripts/setup.py::_corpus_presente`:
+      controllava solo che la cartella del corpus non fosse vuota, quindi un primo clone
+      interrotto a metà (connessione caduta) veniva scambiato per "già pronto" nei rilanci
+      successivi, con indicizzazione silenziosamente incompleta; ora verifica con
+      `git rev-parse HEAD` che il clone sia davvero completo, e rimuove/ricrea quello incompleto.
+      Verificato con un clone finto rotto in una cartella di scratch (non il corpus reale): rotto
+      → False, reale → True, inesistente → False. Aggiunta anche un'identità git locale
+      placeholder nel solo clone del corpus (mai globale), come rete di sicurezza contro
+      un'eventuale richiesta di credenziali che un utente non tecnico non saprebbe gestire,
+      pur non avendo trovato un caso concreto in cui oggi si presenti (il clone è HTTPS anonimo
+      di sola lettura, non richiede mai identità). Test verdi dopo ogni modifica.
 
 Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali,
 l'installer e il ranking pesato, affinato e corretto (`995e154`, `0d0667a`), riconfermato dal vivo

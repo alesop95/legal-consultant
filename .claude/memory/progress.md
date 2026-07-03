@@ -6,6 +6,28 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-03 — Hardening scatola chiusa in preparazione del test su macchina vergine
+
+Commit: nessuno (pendente). File toccati: `README.md`, `scripts/setup.py`.
+Motivo: discusso con l'utente il target reale del prodotto (avvocati e studi legali, zero
+conoscenza tecnica, intervento manuale nullo per quanto possibile) e pianificato un test in
+Windows Sandbox su macchina vergine (Windows 11 Pro, virtualizzazione presente; feature abilitata
+dall'utente ma in attesa del riavvio, quindi il test vero e proprio resta sospeso). Nel frattempo,
+tre correzioni concrete emerse dal ragionamento su questo target: `README.md` ora guida chi non
+conosce git al download ZIP da GitHub, avvisa del possibile blocco SmartScreen sugli script non
+firmati con l'istruzione per sbloccarlo, dà un'aspettativa di durata realistica (15-20 minuti) e un
+passo di verifica finale. Trovato e corretto un bug reale in `_corpus_presente` (setup.py): un
+controllo di sola non-vuotezza della cartella avrebbe scambiato un clone del corpus interrotto a
+metà (connessione caduta durante il primo setup) per uno completo nei rilanci successivi, lasciando
+un indice silenziosamente incompleto senza errore; ora verifica `git rev-parse HEAD` e ricrea il
+clone se non valido, verificato con un clone finto in una cartella di scratch. Aggiunta anche
+un'identità git locale placeholder (mai globale) nel clone del corpus, come rete di sicurezza
+difensiva su richiesta esplicita dell'utente, pur non avendo trovato un caso concreto in cui il
+flusso attuale (clone HTTPS anonimo pubblico) richieda oggi credenziali. Domanda aperta con
+l'utente, non ancora risolta: se in futuro serva anche un canale di aggiornamento via git per il
+progetto stesso (non solo per il corpus), da riprendere quando risponde. 12 test verdi dopo ogni
+modifica.
+
 ## 2026-07-03 — Fase D chiusa: fetch_codici.py verificato, piano di test completo
 
 Commit: nessuno (pendente). File toccati in questa voce: `.claude/context/current-work.md`

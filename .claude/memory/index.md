@@ -81,13 +81,32 @@ emerso prima (collisione di path che differiscono solo per case, incompatibile c
 pull --ff-only) e ritestato con successo (1010 atti aggiornati, corpus avanzato a `086a90b8`, 12
 test verdi). `fetch_codici.py` ritestato: 5/5 codici riscaricati alla vigenza odierna, nessuna
 differenza rispetto ai file tracciati (nessuna modifica legislativa nel periodo, non un difetto).
-Con questo l'intero piano di test (Fasi B, C, D) è chiuso. Codice e schede pendenti da committare.
-Primo, ora: l'utente committa (`src/legal_consultant/update/__init__.py`, `current-work.md`,
-`memory/index.md`, `memory/progress.md`, più i pendenti di Fase C: `HANDOFF.md`,
-`prompts/consulente-legale.md`, `src/legal_consultant/mcp_server.py`). Poi, solo se serve: valutare
-l'ibrido con embedding (Fase 4, ADR-003) per le tre cause residue di ranking non riverificate dal
-vivo (rubrica scollegata art. 633 c.p.c., variazione di lemma art. 110 c.p., diluizione art. 2087
-c.c.), isolate ma non bloccanti — nessuna urgenza, il prodotto è completo e verificato end-to-end
-su tutte le fasi pianificate. Nota: dopo `git pull` o modifiche, rilanciare `sync-context`. Ogni
-modifica a `fts.py`/`mcp_server.py` richiede il riavvio di Claude Desktop (anche dalla tray) per
-essere caricata dal server.
+Con questo l'intero piano di test originario (Fasi B, C, D) è chiuso.
+
+Nuovo fronte aperto su richiesta dell'utente: il target reale del prodotto sono avvocati e studi
+legali senza alcuna competenza tecnica, quindi Fase C va approfondita con un test vero su macchina
+vergine (non solo su questa macchina già configurata) e il pacchetto va reso a intervento manuale
+nullo per quanto possibile. Windows Sandbox scelto come ambiente di test (Windows 11 Pro,
+virtualizzazione presente); l'utente ha lanciato `Enable-WindowsOptionalFeature` ma il riavvio
+richiesto è sospeso, quindi il test vero e proprio non è ancora partito. Nel frattempo, hardening
+già fatto: `README.md` (guida al download ZIP senza git, avviso SmartScreen, aspettativa di durata,
+passo di verifica finale); bug reale corretto in `scripts/setup.py::_corpus_presente` (un clone del
+corpus interrotto a metà veniva scambiato per completo nei rilanci, ora verifica
+`git rev-parse HEAD`); identità git locale placeholder aggiunta nel clone del corpus come rete di
+sicurezza su richiesta esplicita dell'utente. Domanda aperta, senza risposta dall'utente finora: se
+serva anche un canale di aggiornamento via git per il progetto legal-consultant stesso, non solo
+per il corpus (proposta di chiarimento fatta due volte, senza risposta).
+
+Codice e schede pendenti da committare: `src/legal_consultant/update/__init__.py`,
+`README.md`, `scripts/setup.py`, `current-work.md`, `roadmap.md`, `memory/index.md`,
+`memory/progress.md`, più i pendenti di Fase C (`HANDOFF.md`, `prompts/consulente-legale.md`,
+`src/legal_consultant/mcp_server.py`). Anche `.git/modules` locale da 419 MB (residuo del vecchio
+submodule del corpus, mai pulito, solo su questa macchina) segnalato ma non ancora ripulito, in
+attesa di conferma dell'utente. Primo, alla ripresa: l'utente committa; poi riavvio per abilitare
+Windows Sandbox e test da zero (download ZIP, non git clone, per validare anche quel percorso);
+poi chiarire il punto sull'account/canale git. Infine, solo se serve: valutare l'ibrido con
+embedding (Fase 4, ADR-003) per le tre cause residue di ranking non riverificate dal vivo (rubrica
+scollegata art. 633 c.p.c., variazione di lemma art. 110 c.p., diluizione art. 2087 c.c.), isolate
+ma non bloccanti. Nota: dopo `git pull` o modifiche, rilanciare `sync-context`. Ogni modifica a
+`fts.py`/`mcp_server.py` richiede il riavvio di Claude Desktop (anche dalla tray) per essere
+caricata dal server.
