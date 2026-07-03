@@ -6,6 +6,54 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-03 — Fase B conclusa: batteria di domande 8/8 superate
+
+Commit: nessuno (verifica manuale in Claude Desktop, nessun file di codice toccato).
+File toccati: `.claude/context/current-work.md` (checklist e narrativa completate).
+Motivo: completate le ultime due domande della batteria, sospesa nella sessione precedente per
+limite di Claude Desktop. Domanda 7 (`info_corpus`): tabella completa di freschezza (30 giugno
+2026, 287.790 atti, 966.126 chunk), scarto corretto rispetto alla data odierna, limiti strutturali
+richiamati con continuità dalla risposta precedente sul Reg. UE 2023/988. Domanda 8 (query
+generica su una multa): primo turno pone una domanda di chiarimento invece di rispondere a memoria
+o cercare sul web (comportamento ragionevole, procedure di ricorso diverse per tipo di sanzione);
+al chiarimento cerca e cita correttamente D.Lgs. 285/1992 artt. 203-204 e D.Lgs. 150/2011 art. 7,
+con confronto dei due canali di ricorso. Fase B chiusa: 8/8 superate, nessun comportamento fuori
+disciplina in tutta la batteria.
+
+## 2026-07-02 — Fase B: Project "Consulente legale" e batteria di domande (6/8)
+
+Commit: nessuno (verifica manuale in Claude Desktop, nessun file di codice toccato).
+File toccati: `.claude/context/current-work.md` (definition of done e narrativa dei risultati).
+Motivo: creato il Project "Consulente legale" in Claude Desktop con le istruzioni di
+`prompts/consulente-legale.md` incollate senza modifiche (verificato su screenshot) e il tool
+`legge-it` collegato. Eseguita dal vivo una batteria di otto domande pensata per coprire ambiti
+diversi del corpus e la disciplina comportamentale delle istruzioni, non solo il ranking già
+chiuso in Fase A. Esito delle 6 completate: tutte superate. Due risultati di rilievo oltre alla
+tenuta generale: le istruzioni del Project (prova più formulazioni, usa `leggi_atto` se conosce
+l'articolo) hanno risolto in pratica due dei quattro casi critici residui di Fase A senza bisogno
+dell'ibrido con embedding (risoluzione del contratto per inadempimento → art. 1453 c.c. corretto;
+garanzia di conformità → art. 128 codice del consumo corretto); e sulla domanda sul Reg. UE
+2023/988, assente dal corpus, il modello ha dichiarato esplicitamente l'assenza, evitato la
+ricerca web e la risposta a memoria, e costruito comunque una risposta operativa onesta sulla
+cornice nazionale di raccordo effettivamente presente. Domande 7 (freschezza corpus, già
+validata spontaneamente in quasi tutte le risposte) e 8 (query generica) sospese per limite di
+sessione di Claude Desktop raggiunto (reset alle 19:00), da completare alla ripresa.
+
+## 2026-07-02 — Ri-ancoraggio delle schede a f7a4da9, avvio Fase B
+
+Commit: `f7a4da9` (registrazione riconferma dal vivo, già presente in HEAD a inizio sessione).
+File toccati: `.claude/context/STACK.md`, `design-and-security.md`, `deployment.md`,
+`dev-testing.md`, `current-work.md`, `roadmap.md` (solo bump `last-verified-commit` a `f7a4da9`,
+nessuna riscrittura di contenuto), `.claude/memory/index.md` (commit di riferimento, tabella di
+stato, punto di ripresa).
+Motivo: `sync-context` a inizio sessione ha rilevato che il commit `f7a4da9`, descritto
+dall'ultima voce come "pendente", era in realtà già in HEAD; il solo drift residuo era il
+puntatore `last-verified-commit` delle sei schede, ancora fermo a `889f843`/`0d0667a`. Nessun file
+di codice coperto dalle schede è cambiato oltre quanto già descritto nel contenuto (`fts.py` per il
+ranking, già narrato). Confermato con l'utente prima di scrivere. Chiude la formalità di
+ri-ancoraggio pianificata come primo passo prima della Fase B; segue l'avvio della Fase B (Project
+"Consulente Legale" in Claude Desktop + batteria di domande).
+
 ## 2026-07-02 — Riconferma dal vivo in Claude Desktop dopo il fix
 
 Commit: nessuno (verifica, nessun file di codice toccato)

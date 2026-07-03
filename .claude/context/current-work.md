@@ -10,7 +10,7 @@ covers-paths:
   - scripts/update_corpus.py
   - .mcp.json
   - prompts/**
-last-verified-commit: 889f843
+last-verified-commit: f7a4da9
 stato: in lavorazione
 ---
 
@@ -81,15 +81,68 @@ Definition of done:
       inadempimento" → art. 1564 invece di 1453 c.c.) è il residuo noto, non un nuovo bug; il
       modello stesso lo ha diagnosticato correttamente in chat come limite del ranking lessicale su
       quella formulazione.
-- [ ] Fase B: Project "Consulente Legale" + batteria di domande dal vivo in Claude Desktop
+- [x] Fase B, Project creato: "Consulente legale" in Claude Desktop (Sonnet 4.6, ragionamento
+      alto), istruzioni incollate da `prompts/consulente-legale.md` (verificate su screenshot,
+      testo e disclaimer coincidenti), tool `legge-it` collegato e confermato in uso ("Usata
+      integrazione legge-it" su ogni risposta)
+- [x] Fase B, batteria di domande dal vivo: 8/8 completate, tutte superate (dettaglio sotto)
 - [ ] prova dell'installer su una situazione pulita (Fase C); prova aggiornamento (Fase D)
 
 Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali,
 l'installer e il ranking pesato, affinato e corretto (`995e154`, `0d0667a`), riconfermato dal vivo
 in Claude Desktop dopo il fix (5/6, screenshot_01.png). Fase A conclusa; il drift di ranking è
 stato analizzato a fondo e risolto per quanto possibile su base lessicale, col residuo isolato in
-quattro cause distinte (vedi domande aperte), tutte strutturali al solo BM25. Restano le Fasi
-B/C/D del piano di test.
+quattro cause distinte (vedi domande aperte), tutte strutturali al solo BM25. Fase B conclusa (vedi
+sotto). Restano le Fasi C/D del piano di test.
+
+Fase B — risultati della batteria di domande (2026-07-02/03, 8/8 completate, tutte superate). Project
+"Consulente legale" creato in Claude Desktop con le istruzioni di `prompts/consulente-legale.md`
+incollate senza modifiche (verificato su screenshot: testo e disclaimer coincidenti) e il tool
+`legge-it` collegato e confermato in uso su ogni domanda ("Usata integrazione legge-it").
+
+1. Prescrizione dell'omicidio: cita art. 157 c.p. con URN e distingue correttamente le tre
+   fattispecie (art. 575 doloso semplice 24 anni, artt. 576-577 co.1 aggravato con ergastolo
+   imprescrittibile, art. 577 co.2 aggravato con reclusione 24-30 anni), disclaimer regolare.
+2. Risoluzione del contratto per inadempimento: risolve il caso critico noto di Fase A (l'articolo
+   generale art. 1453 c.c. contro le norme speciali con rubrica letterale "Risoluzione del
+   contratto"). Le istruzioni del Project (prova più formulazioni, usa `leggi_atto` se conosce
+   l'articolo) hanno compensato in pratica il residuo di ranking: risposta corretta e completa sui
+   quattro meccanismi (art. 1453 giudiziale, 1454 diffida, 1456 clausola risolutiva, 1457 termine
+   essenziale).
+3. Licenziamento per giusta causa: cita art. 2119 c.c., D.Lgs. 23/2015 art. 3, D.Lgs. 104/2022 art.
+   14 sull'onere della prova; segnala esplicitamente che la L. 604/1966, pur pertinente, "non
+   risulta indicizzata nel corpus locale" invece di rispondere a memoria o cercarla altrove.
+4. Garanzia di conformità nella vendita di beni di consumo: risolve l'altro caso critico noto di
+   Fase A (rubrica dell'art. 128 codice del consumo scollegata dal contenuto). Trattazione completa
+   e corretta di tutto l'impianto (artt. 129, 130, 133, 134, 135-bis/ter/quater).
+5. Termini per la querela: art. 124 c.p. (3 mesi) più le deroghe speciali verificate nel corpus
+   (art. 609-septies 12 mesi, art. 612-bis 6 mesi); dichiara esplicitamente che oltre queste il
+   corpus non garantisce completezza e rimanda a Normattiva.
+6. Domanda su norma probabilmente assente (Reg. UE 2023/988 sulla tracciabilità): comportamento
+   esemplare, il più significativo della batteria. Prova l'URN diretto, verifica l'assenza di
+   risultati, dichiara che il testo del regolamento non è indicizzato, e costruisce comunque una
+   risposta operativa onesta sulla cornice nazionale di raccordo che il corpus contiene davvero
+   (D.Lgs. 78/2026, Codice del consumo modificato), senza mai cercare sul web né rispondere a
+   memoria sul contenuto del regolamento stesso.
+
+7. Freschezza del corpus (`info_corpus`): chiama esplicitamente "Info corpus" e restituisce una
+   tabella completa (aggiornamento 30 giugno 2026, ultima indicizzazione, 287.790 atti, 966.126
+   chunk, hash del commit), calcola correttamente lo scarto rispetto alla data odierna (~3 giorni)
+   e riepiloga in modo trasparente i limiti strutturali del corpus richiamando coerentemente la
+   risposta precedente sul Reg. UE 2023/988 (continuità conversazionale nella stessa chat).
+8. Domanda generica/ambigua ("ho ricevuto una multa che ritengo ingiusta, cosa posso fare?"): primo
+   turno, il modello non risponde a memoria né cerca sul web, ma pone una domanda di chiarimento
+   sul tipo di multa (Codice della Strada, altra sanzione amministrativa, tributaria), perché le
+   procedure di ricorso sono radicalmente diverse — comportamento da consulente reale, anche se non
+   conclusivo sull'uso di `cerca_normativa`. Al chiarimento ("eccesso di velocità, verbale del
+   Codice della Strada") cerca e cita correttamente D.Lgs. 285/1992 artt. 203-204 e D.Lgs. 150/2011
+   art. 7, con confronto strutturato dei due canali di ricorso (Prefetto/Giudice di Pace) e
+   consiglio operativo motivato.
+
+Fase B conclusa: 8/8 domande superate. Nessun comportamento fuori disciplina (niente risposte a
+memoria non dichiarate, niente ricerca web, disclaimer sempre presente e corretto); due dei quattro
+casi critici residui di Fase A risolti in pratica dalle istruzioni del Project senza l'ibrido con
+embedding.
 
 Domande aperte:
 

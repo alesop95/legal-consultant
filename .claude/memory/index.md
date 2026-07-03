@@ -8,25 +8,24 @@
 
 ```
 Branch attivo:         main
-Commit di riferimento: 0d0667a (codice); riconferma dal vivo registrata, nessun codice pendente
+Commit di riferimento: f7a4da9 (registrazione riconferma dal vivo del ranking, 5/6)
 Data snapshot:         2026-07-02
 ```
 
 ## Stato di verifica delle schede
 
-HEAD reale è `0d0667a` (affinamento del ranking in `995e154`, fix del sovra-campionamento e del
-bonus codici generali in `0d0667a`). STACK.md e current-work.md hanno contenuto aggiornato con
-l'esito della riconferma dal vivo in Claude Desktop (5/6, screenshot_01.png), non ancora
-committato: nessun drift, solo la formalità del prossimo ri-ancoraggio.
+HEAD reale è `f7a4da9` (affinamento del ranking in `995e154`, fix del sovra-campionamento e del
+bonus codici generali in `0d0667a`, registrazione della riconferma dal vivo in `f7a4da9`). Tutte
+le schede sono ri-ancorate a `f7a4da9`: nessun drift residuo.
 
 | Scheda | last-verified | Stato |
 |---|---|---|
-| STACK.md | 889f843 | contenuto aggiornato oltre `0d0667a` (riconferma dal vivo), commit pendente |
-| design-and-security.md | 889f843 | allineata (strati, update, mitigazioni, path lunghi) |
-| deployment.md | 889f843 | allineata (installer, setup, registrazione client) |
-| dev-testing.md | 889f843 | allineata (pytest 12, fixture, benchmark) |
-| current-work.md | 889f843 | contenuto aggiornato oltre `0d0667a` (residuo in 4 cause), commit pendente |
-| roadmap.md | 889f843 | allineata (benchmark misurato; ibrido come Fase 4) |
+| STACK.md | f7a4da9 | allineata |
+| design-and-security.md | f7a4da9 | allineata (strati, update, mitigazioni, path lunghi) |
+| deployment.md | f7a4da9 | allineata (installer, setup, registrazione client) |
+| dev-testing.md | f7a4da9 | allineata (pytest 12, fixture, benchmark) |
+| current-work.md | f7a4da9 | contenuto aggiornato oltre `f7a4da9` (risultati Fase B), commit pendente |
+| roadmap.md | f7a4da9 | allineata (benchmark misurato; ibrido come Fase 4) |
 
 ## Stato del corpus e dell'indice
 
@@ -68,13 +67,16 @@ contratto" → art. 1564 c.c. invece della norma generale art. 1453 c.c.). Tutte
 richiedono l'ibrido con embedding leggero CPU (ADR-003, Fase 4): nessun'altra leva lessicale su
 BM25 le risolve senza rischiare nuove regressioni. Non sono bloccanti per l'uso quotidiano.
 
-Prossime azioni, in ordine. Primo: l'utente committa la registrazione della riconferma dal vivo
-(le schede toccate in questa terza tornata; vedi comandi git dati in sessione) e si esegue un
-rapido ri-ancoraggio delle schede al nuovo hash. Poi (Fase B, prossimo task sostanziale): creare il
-Project "Consulente Legale" in Claude Desktop con le istruzioni di `prompts/consulente-legale.md` e
-provare dal vivo la batteria di domande completa. Terzo (Fasi C/D): provare `install.cmd` su una
-macchina/utente pulito; provare `update_corpus.py` (aggiornamento incrementale). Quarto, solo se
-serve ancora dopo la Fase B: valutare l'ibrido con embedding (Fase 4, ADR-003) per le quattro cause
-residue. Nota: dopo `git pull` o modifiche, rilanciare `sync-context`. Ogni modifica a
-`fts.py`/`mcp_server.py` richiede il riavvio di Claude Desktop (anche dalla tray) per essere
-caricata dal server.
+Prossime azioni, in ordine. Ri-ancoraggio delle schede a `f7a4da9` fatto in sessione precedente.
+Fase B conclusa: Project "Consulente legale" creato in Claude Desktop con le istruzioni di
+`prompts/consulente-legale.md`, tool `legge-it` collegato e confermato in uso. Batteria di otto
+domande dal vivo: 8/8 superate (dettaglio in `current-work.md` e nel work-log del 2026-07-02/03),
+incluse due conferme che le istruzioni del Project risolvono in pratica due dei quattro casi
+critici residui di Fase A senza l'ibrido con embedding, e un uso corretto e trasparente di
+`info_corpus` e della dichiarazione di assenza dal corpus. Primo, ora: l'utente committa la
+registrazione dei risultati di Fase B (`current-work.md`, `memory/index.md`, `memory/progress.md`).
+Poi (Fasi C/D): provare `install.cmd` su una macchina/utente pulito; provare `update_corpus.py`
+(aggiornamento incrementale). Infine, solo se serve ancora: valutare l'ibrido con embedding (Fase
+4, ADR-003) per le quattro cause residue di ranking, che restano isolate ma non bloccanti. Nota:
+dopo `git pull` o modifiche, rilanciare `sync-context`. Ogni modifica a `fts.py`/`mcp_server.py`
+richiede il riavvio di Claude Desktop (anche dalla tray) per essere caricata dal server.
