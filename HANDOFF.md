@@ -98,6 +98,63 @@ del Project, §5.4) e soggezione ai limiti d'uso del piano Team.
 **Confine di privacy:** corpus, indice e ricerca sono interamente locali. Solo la
 conversazione (domanda + estratti restituiti dai tool) passa per Claude Desktop.
 
+### 4.1 Flusso end-to-end as-built (2026-07-03)
+
+Il diagramma di §4 descrive l'impostazione decisa prima dell'implementazione e resta come
+riferimento di progetto. Il flusso realmente costruito, verificato end-to-end fino alla Fase
+B, se ne discosta su alcuni punti: il corpus è un clone locale ignorato da git invece di un
+submodule, l'indicizzazione applica un ranking pesato oltre al BM25 nudo, ed esiste un layer
+di istruzioni nel Project di Claude Desktop non presente nel disegno iniziale. Il diagramma
+seguente descrive lo stato reale.
+
+```mermaid
+flowchart TD
+    subgraph SRC["Fonti normative"]
+        A1["italia-corpus<br/>clone locale gitignored, git pull manuale/schedulato"]
+        A2["codici-extra<br/>tracciato, fetch_codici.py da Normattiva"]
+    end
+
+    subgraph IDX["Indicizzazione locale (no GPU)"]
+        B1["ingest: parse Markdown+YAML,<br/>chunk per articolo"]
+        B2["index: SQLite FTS5<br/>legge.sqlite, ~2.6 GB<br/>287.816 atti / 966.126 chunk"]
+        B3["update: git diff --name-status<br/>reindex incrementale + state.json"]
+    end
+
+    subgraph MCP["Server MCP 'legge-it' (Python, FastMCP, stdio)"]
+        C1["cerca_normativa<br/>BM25 + filtro stopword + bonus rubrica<br/>+ bonus codici generali + sovra-campionamento min. 400"]
+        C2["leggi_atto<br/>testo integrale di un atto o articolo per URN"]
+        C3["info_corpus<br/>freschezza, atti/chunk indicizzati, commit"]
+    end
+
+    subgraph DESK["Claude Desktop (piano Team, zero costo API)"]
+        D1["claude_desktop_config.json<br/>registrazione del server (installer un clic)"]
+        D2["Project 'Consulente legale'<br/>istruzioni: disambigua se la domanda copre piu' discipline,<br/>cerca prima di rispondere, usa leggi_atto se conosce l'articolo,<br/>cita URN e testo letterale, dichiara le assenze dal corpus,<br/>chiude sempre col disclaimer"]
+    end
+
+    subgraph USER["Avvocato / studio di consulenza"]
+        E1["domanda in chat"]
+        E2["risposta strutturata: citazioni con URN,<br/>limiti del corpus dichiarati, disclaimer"]
+    end
+
+    A1 --> B1
+    A2 --> B1
+    B1 --> B2
+    B3 -.aggiornamento incrementale.-> B2
+    B2 --> C1 & C2 & C3
+    C1 & C2 & C3 --> D1
+    D1 --> D2
+    E1 --> D2
+    D2 -- "chiama i tool legge-it" --> C1 & C2 & C3
+    C1 & C2 & C3 -. estratti .-> D2
+    D2 --> E2
+```
+
+Due percorsi restano fuori dal diagramma perché operativi, non conversazionali: il setup
+iniziale (`install.cmd`/`install.ps1` → `scripts/setup.py` → registrazione in
+`claude_desktop_config.json`, nodo D1) e l'aggiornamento periodico del corpus
+(`scripts/update_corpus.py`, nodo B3), entrambi pensati per girare senza intervento tecnico
+da parte dello studio legale che usa il prodotto.
+
 ---
 
 ## 5. Decisioni tecniche chiave
