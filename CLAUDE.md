@@ -46,6 +46,15 @@ HANDOFF.md   architettura, stack, decisioni tecniche e roadmap (design di riferi
 README.md    descrizione pubblica per GitHub
 ```
 
+Documenti di posizionamento e lettura architetturale a più livelli, sotto `docs/`.
+
+```
+docs/flusso-e-architettura.md      flusso operativo su una postazione di studio legale;
+                                    diagrammi a livello operativo, tecnico, linguistico
+docs/mercato-privacy-e-token.md    confronto con l'AI legale a pagamento, evidenze di
+                                    community, vantaggio di privacy, stima di utilizzo giornaliero
+```
+
 Memoria e meta-stato, sotto `.claude/memory/`, letti sempre a inizio sessione.
 
 ```

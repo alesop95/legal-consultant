@@ -1,0 +1,180 @@
+# Mercato, privacy e stima di utilizzo giornaliero
+
+> Documento di progetto, tracciato. Confronta il modello dati di legal-consultant con gli
+> strumenti di AI legale a pagamento e cloud-based diffusi sul mercato, riporta le evidenze di
+> community e i casi giudiziari noti su privacy e allucinazioni, e stima l'impatto in termini di
+> contesto/token di un giorno reale di utilizzo. Le fonti esterne sono citate puntualmente; dove
+> una ricerca non ha trovato un dato verificabile, è dichiarato "non trovato" invece di essere
+> inferito, per lo standard di onestà di `interaction-style.md`.
+
+## 1. Panorama degli strumenti a pagamento e il loro modello dati
+
+Gli strumenti di AI legale oggi sul mercato, internazionali e italiani, condividono
+un'architettura di fondo: il documento del cliente e la domanda dell'avvocato viaggiano verso
+un'infrastruttura cloud gestita dal fornitore, che a sua volta si appoggia quasi sempre su un
+*model provider*[^1] terzo (OpenAI, Anthropic, Google, o Azure OpenAI) per il ragionamento
+linguistico. Harvey AI gira su Microsoft Azure con opzione di elaborazione dedicata in Unione
+Europea, Svizzera o Australia, dichiara di non usare gli input dei clienti per addestrare i
+modelli sottostanti e impone contrattualmente la *Zero Data Retention*[^2] ai provider, con un
+Trust Center pubblico che elenca come subprocessor Google Cloud, AWS, Anthropic, OpenAI e Azure
+insieme (harvey.ai/security, trust.harvey.ai). CoCounsel di Thomson Reuters dichiara di non usare
+i dati per addestrare né il proprio modello né gli LLM di terzi tramite chiamate API a
+retention zero, ma per la variante Legal non è stata trovata una pagina ufficiale equivalente a
+quella pubblicata per l'ambito Tax/Audit, che dichiara esplicitamente hosting "negli Stati
+Uniti" (thomsonreuters.com/help/cocounsel). Lexis+ AI di LexisNexis gira su infrastruttura Azure
+e AWS senza una regione dichiarata pubblicamente, non usa i dati clienti per il tuning dei
+modelli e rimuove la cronologia dopo 90 giorni. vLex Vincent AI è il solo, tra gli strumenti
+coperti, a dichiarare esplicitamente la possibilità per il cliente di scegliere la
+regione di hosting e delle chiavi di cifratura tra Stati Uniti, Australia e Unione Europea
+(support.vlex.com). Spellbook elabora su AWS in Canada (regione ca-central-1) con accordi di
+Zero Data Retention negoziati con OpenAI e Anthropic; Robin AI dichiara che i dati "non lasciano
+mai l'ambiente AWS di Robin" e nomina Anthropic e Amazon Bedrock, non OpenAI, come subprocessor
+del trattamento AI. Luminance ospita i dati personali a Cambridge, nel Regno Unito, appoggiandosi
+al *Data Privacy Framework*[^3] UE-USA e alle clausole contrattuali standard come base legale per
+i trasferimenti internazionali.
+
+Sul fronte italiano ed europeo il quadro è più opaco: TeamSystem Legal (con il prodotto Normo.ai)
+dichiara che i dati non escono dall'Unione Europea se non per il backup, e che non vengono mai
+usati per addestrare modelli pubblici, con un prezzo di listino intorno a 1.590 euro più IVA
+l'anno (scontato a circa 720 euro nelle convenzioni con gli ordini forensi, fonte terza non
+ufficiale). Zucchetti dichiara elaborazione in data center italiani e nessun uso dei dati per
+addestrare LLM esterni, ma senza certificazioni di sicurezza specifiche verificabili. Per Wolters
+Kluwer Italia (Leggi d'Italia, One LEGALE) la privacy policy generale ammette il trasferimento
+dei dati anche verso data center extra-UE e cita ancora il Dlgs 196/2003 invece del GDPR nel
+testo italiano; per Consulcesi e per DeJure (che è un prodotto di Giuffrè Francis Lefebvre, non
+di Wolters Kluwer) la ricerca non ha trovato alcun dato verificabile sui cinque criteri
+esaminati.
+
+Il livello di trasparenza pubblica varia molto da fornitore a fornitore: Harvey e Lexis+ AI
+pubblicano un Trust Center con certificazioni *SOC 2 Type II*[^4] e *ISO/IEC 27001*[^5]
+verificabili con data di rilascio; altri (Robin AI, CoCounsel per l'ambito legale specifico,
+gran parte degli strumenti italiani) dichiarano conformità sulla pagina di sicurezza senza un
+report scaricabile o una data di certificazione puntuale. In nessuno strumento esaminato è
+prevista, come opzione architetturale, l'assenza totale di trasmissione dei documenti del
+cliente verso un'infrastruttura di terzi: la scelta possibile è sempre su *dove* i dati vengono
+elaborati, mai se lo vengono.
+
+## 2. Evidenze di community e casi giudiziari
+
+Sul lato tecnico, la letteratura del 2026 (Elastic Search Labs, e articoli tecnici su dev.to
+come "BM25 vs. Vector Search: Choosing the Right Retrieval Strategy") converge su un punto: per
+corpus normativi la ricerca lessicale pura (BM25, la stessa famiglia di algoritmo usata da FTS5)
+cattura le corrispondenze esatte su numeri di articolo e riferimenti normativi che la sola
+ricerca per *embedding*[^6] tende a perdere, mentre il vector search coglie le formulazioni
+semanticamente equivalenti che il matching lessicale manca; lo standard emergente per la
+produzione è ibrido, non un aut-aut. Un progetto open source pubblicato su dev.to (LegalLens,
+github.com/LakshmiSravyaVedantham/legal-lens) dichiara esplicitamente di aver sostituito un
+software legale da 1.200 dollari al mese con una pipeline interamente locale (FastAPI, ChromaDB,
+embedding locali, Ollama opzionale) proprio per motivi di controllo e costo. Su Reddit, una
+discussione verificabile in r/n8n (utente eeko_systems, "Just closed a $35,000 deal with a law
+firm") descrive uno studio legale che ha commissionato un sistema AI privato basato su un modello
+open pesante ospitato su un'infrastruttura GPU dedicata, esplicitamente per non esporre documenti
+riservati a OpenAI o Anthropic in violazione delle proprie policy di riservatezza verso i
+clienti — un singolo caso concreto, non un campione statistico, ma coerente con la ragione
+d'adozione più citata (secondo un aggregatore di secondo livello, non una fonte primaria
+verificata) dalla comunità r/LocalLLaMA per l'uso di modelli locali su documenti sensibili.
+
+Il fronte più documentato è quello giudiziario. Il database pubblico curato dal ricercatore
+Damien Charlotin (damiencharlotin.com/hallucinations) censisce circa 1.490 decisioni nel mondo
+che commentano casi di allucinazione dell'AI generativa in atti processuali, oltre mille delle
+quali negli Stati Uniti a maggio 2026, con un trend di sanzioni in crescita netta:
+
+| Caso | Foro | Anno | Esito |
+|---|---|---|---|
+| Mata v. Avianca (Schwartz/LoDuca) | S.D.N.Y. | 2023 | 5.000 $ più lettere correttive e formazione etica obbligatoria |
+| People v. Crabill | Colorado, disciplinare | 2023 | sospensione di un anno e un giorno |
+| Studio legale tra i 14 più grandi USA | 6° Circuito, Cincinnati | 2026 | 30.000 $ per due avvocati, oltre 24 citazioni false |
+| Causa in S.D. Ohio | S.D. Ohio | 2026 | 7.500 $ più segnalazione all'Ohio Supreme Court Disciplinary Counsel |
+| Causa federale in Oregon | Corte federale, Oregon | 2026 | 110.000 $, la sanzione più alta registrata negli USA, 23 citazioni fabbricate |
+| W. Gregory Lake | Nebraska Supreme Court | 2026 | sospensione dall'esercizio della professione, 57 citazioni difettose su 63 |
+
+Il pattern che emerge da queste decisioni, secondo le fonti raccolte (ABA Journal, Fortune,
+Hacker News), è che i tribunali puniscono più severamente il mancato riconoscimento dell'errore
+che l'errore stesso: nei casi con sanzioni più alte l'avvocato ha prima negato e poi ammesso
+l'uso di AI generativa senza verifica delle fonti. Questo non è un argomento a favore o contro
+uno strumento locale rispetto a uno cloud in sé — l'allucinazione è un rischio del modello
+linguistico, non della sua sede di calcolo — ma rafforza la ragione per cui `legge-it` è
+disegnato per restituire solo estratti testuali verificabili tratti dal corpus indicizzato, mai
+un testo generato a memoria: il rischio di citazione inventata si sposta da "il modello inventa
+un articolo" a "il modello deve dichiarare se l'articolo non è nel corpus", un compito diverso e
+più verificabile, per quanto non elimini il bisogno di verifica umana finale, che resta il
+disclaimer costante di ogni risposta.
+
+## 3. Il vantaggio strutturale del modello locale
+
+La differenza tra `legge-it` e ciascuno degli strumenti del paragrafo 1 non è di grado ma di
+architettura. In tutti gli strumenti esaminati, indipendentemente da quanto seria sia la loro
+politica di *Zero Data Retention* o da quante certificazioni espongano, il documento del cliente
+attraversa fisicamente una rete verso un'infrastruttura di terzi prima di tornare come risposta:
+la fiducia richiesta all'avvocato è nella policy contrattuale del fornitore, non nell'assenza
+strutturale del canale. In `legge-it` il corpus normativo, l'indice di ricerca e il motore BM25
+girano interamente sul disco della postazione dello studio; l'unico dato che lascia la macchina è
+la conversazione con Claude Desktop stessa (la domanda dell'avvocato e gli estratti normativi
+che il tool restituisce), non un documento del cliente, perché il prodotto non ingerisce mai
+documenti del cliente: indicizza solo testo normativo pubblico. Questo capovolge la superficie di
+rischio rispetto agli strumenti concorrenti, che sono costruiti apposta per analizzare documenti
+riservati (contratti, atti di causa, corrispondenza) e quindi devono necessariamente inviarli a
+un'infrastruttura esterna per elaborarli. Per uno studio che usa `legge-it` solo per la ricerca
+normativa (non per l'analisi di documenti propri), il confine di privacy si sposta da "quali
+garanzie contrattuali offre il fornitore sui miei dati" a "i miei dati non generano nemmeno la
+domanda": la ricerca gira offline, senza connessione, e resterebbe interrogabile anche se
+Internet fosse spento, cosa impossibile per definizione per qualunque concorrente di questo
+paragrafo.
+
+## 4. Stima di utilizzo giornaliero in termini di contesto/token
+
+Claude Desktop nel piano Team funziona a canone fisso per postazione, non a consumo per token:
+non esiste una bolletta che cresce con l'uso. Esiste però un tetto di utilizzo per finestra
+temporale che Anthropic non pubblica come numero grezzo di token ma come limite di messaggi in
+un periodo (il valore esatto cambia nel tempo e per piano, quindi non viene citato qui come
+cifra, per non presentare come fatto un dato che potrebbe non essere più esatto quando questo
+documento viene letto). L'argomento che segue è quindi strutturale, non un numero di soglia: cosa
+consuma `legge-it` per ogni domanda, confrontato con l'alternativa di incollare a mano il testo
+delle norme in chat.
+
+Il codice fissa dei limiti concreti e verificabili sul contenuto restituito da ogni chiamata.
+`cerca_normativa` (`src/legal_consultant/mcp_server.py`) ha `limit=8` di default, e ogni riga
+usa la funzione nativa `snippet()` di FTS5 con una finestra di 16 token intorno al punto di
+corrispondenza (`src/legal_consultant/index/fts.py`): una singola chiamata di ricerca restituisce
+quindi al massimo circa 130 token di testo normativo, più i campi di corredo (URN, titolo
+dell'atto, articolo, rubrica, punteggio), per un totale realistico dell'ordine di 500-900 token
+per l'intera risposta JSON. Quando Claude, dopo aver trovato l'articolo giusto, chiama
+`leggi_atto` per leggerne il testo integrale, il costo sale ma resta delimitato a un solo
+articolo, non all'intero atto: per un articolo di media lunghezza l'ordine di grandezza è
+qualche centinaio fino a un migliaio di token. Una domanda tipica di diritto, quindi, con una
+`cerca_normativa` e una `leggi_atto` di verifica, porta in conversazione qualcosa come 1.000-2.000
+token di contenuto normativo, ai quali si aggiunge il ragionamento e la risposta di Claude, in
+genere qualche centinaio di token.
+
+Il confronto che rende evidente il risparmio è con l'alternativa senza il tool: un avvocato che
+copia a mano da Normattiva il testo di un intero codice, o anche di più articoli per costruire il
+contesto di una risposta, porta in chat facilmente decine di migliaia di token in un colpo solo,
+spesso con testo irrilevante alla domanda specifica incluso perché tagliare un articolo a mano
+dal resto della pagina è lavoro che nessuno fa per ogni domanda. `legge-it` restituisce solo la
+porzione pertinente, selezionata dal ranking, quindi il conto di un'intera giornata di lavoro
+resta un multiplo piccolo del costo di una singola domanda fatta bene: anche in una giornata
+densa, con 30-40 domande di diritto poste in sequenza, il contenuto normativo complessivo mosso
+attraverso i tool resta nell'ordine delle decine di migliaia di token totali, una frazione della
+capacità di contesto di una singola conversazione moderna e un carico molto lontano dal tipo di
+utilizzo (sessioni di programmazione lunghe, generazione di documenti estesi) per cui i piani a
+pagamento di Claude sono dimensionati. In pratica, per l'utente non tecnico questo si traduce in
+un fatto semplice da comunicare senza bisogno che lo sappia lui stesso: una volta installato e
+registrato il server MCP, il flusso di ricerca normativa è disegnato per restare leggero per
+ogni domanda, così che il volume di lavoro tipico di uno studio legale non avvicini in pratica il
+tetto di utilizzo del piano, che resta pensato per carichi ben più pesanti.
+
+---
+
+[^1]: *Model provider* — l'azienda che fornisce il modello linguistico di fondo (es. OpenAI,
+Anthropic, Google) su cui uno strumento di terze parti costruisce il proprio prodotto.
+[^2]: *Zero Data Retention* — clausola contrattuale per cui il fornitore del modello si impegna a
+non conservare gli input/output oltre il tempo strettamente necessario a generare la risposta.
+[^3]: *Data Privacy Framework* — accordo tra Unione Europea e Stati Uniti che regola il
+trasferimento di dati personali verso aziende statunitensi certificate, successore del Privacy
+Shield.
+[^4]: *SOC 2 Type II* — certificazione di sicurezza che attesta, con verifica nel tempo (non solo
+puntuale), i controlli di un fornitore su disponibilità, riservatezza e integrità dei dati.
+[^5]: *ISO/IEC 27001* — standard internazionale per i sistemi di gestione della sicurezza delle
+informazioni.
+[^6]: *Embedding* — rappresentazione numerica del significato di un testo, usata per la ricerca
+per similarità semantica invece che per corrispondenza esatta di parole.
