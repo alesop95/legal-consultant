@@ -10,7 +10,7 @@ covers-paths:
   - scripts/update_corpus.py
   - .mcp.json
   - prompts/**
-last-verified-commit: f7a4da9
+last-verified-commit: bae3b34
 stato: in lavorazione
 ---
 

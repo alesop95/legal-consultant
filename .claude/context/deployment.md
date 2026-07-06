@@ -6,7 +6,7 @@ covers-paths:
   - scripts/**
   - src/legal_consultant/mcp_server.py
   - .mcp.json
-last-verified-commit: 69b154e
+last-verified-commit: bae3b34
 ---
 
 # Deployment

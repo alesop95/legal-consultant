@@ -8,8 +8,8 @@
 
 ```
 Branch attivo:         main
-Commit di riferimento: 057d8f6 (refresh del template di sistema; feature auto-update ancora
-                        pendente in working tree, vedi Punto di ripresa)
+Commit di riferimento: bae3b34 (feature auto-update + ri-ancoraggio schede, confermato committato
+                        e pushato, verificato su git log e origin/main)
 Data snapshot:         2026-07-06
 ```
 
@@ -21,11 +21,11 @@ le schede sono ri-ancorate a `f7a4da9`: nessun drift residuo.
 
 | Scheda | last-verified | Stato |
 |---|---|---|
-| STACK.md | 69b154e | allineata (corpus clone non submodule, `update.pull` fetch+reset) |
+| STACK.md | bae3b34 | allineata (corpus clone non submodule, `update.pull` fetch+reset, auto_update.py) |
 | design-and-security.md | 69b154e | allineata (clone non submodule, fetch+reset per collisioni di case) |
-| deployment.md | 69b154e | allineata (setup.py hardened, auto_update.py, clone non submodule) |
+| deployment.md | bae3b34 | allineata (setup.py hardened, auto_update.py, clone non submodule) |
 | dev-testing.md | f7a4da9 | allineata (pytest 12, fixture, benchmark) |
-| current-work.md | f7a4da9 | contenuto aggiornato oltre `f7a4da9` (Fasi C/D, hardening, auto-update), commit pendente |
+| current-work.md | bae3b34 | allineata (Fasi C/D, hardening, auto-update, verifica robustezza installer) |
 | roadmap.md | f7a4da9 | allineata (benchmark misurato; ibrido come Fase 4) |
 
 ## Stato del corpus e dell'indice
@@ -127,19 +127,19 @@ tutti e 5 gli step (dettaglio in `progress.md` e in `current-work.md`). Sostitui
 sostanza, pur non essendo una macchina vergine in senso stretto, il test Fase C su macchina
 pulita rimasto sospeso.
 
-Anomalia da chiarire alla ripresa: il commit della feature di aggiornamento automatico
-(`scripts/auto_update.py`, `install.ps1`, `README.md`, `HANDOFF.md`, le quattro schede di
-`.claude/context/`, `memory/index.md`, `memory/progress.md`) segnalato dall'utente come già fatto
-non risulta in `git log`/`git reflog`: solo il commit del template (`057d8f6`) è realmente
-avvenuto sopra `69b154e`. Tutti quei file restano modificati in `git status`; i comandi per il
-commit sono stati riproposti nella chat ma non ancora confermati eseguiti a fine sessione.
+Anomalia della sessione, risolta: il primo tentativo di commit della feature di aggiornamento
+automatico, segnalato dall'utente come già fatto, non era in realtà mai avvenuto (assente da
+`git log`/`git reflog`, solo il commit del template `057d8f6` era reale). Fatto ripetere: i
+comandi sono stati ridati e l'esito verificato con `git log` e confrontato con `origin/main` prima
+di considerarlo chiuso (`bae3b34`, working tree pulito, push confermato allineato al remoto).
 
-Primo, alla ripresa: verificare che l'utente abbia effettivamente committato il pendente sopra
-(confrontare `git log` con l'hash citato), poi eventualmente rilanciare `sync-context` per
-ri-ancorare `current-work.md` al nuovo HEAD. Il test Windows Sandbox su macchina vergine resta
+Tutte le schede sono ri-ancorate a `bae3b34` (design-and-security.md resta valida a `69b154e`,
+nessun file delle sue covers-paths è cambiato dopo): nessun drift residuo all'inizio della
+prossima sessione. Primo, alla ripresa: il test Windows Sandbox su macchina vergine resta
 un'opzione residua, non più bloccante, se si vuole validare anche il percorso Download ZIP senza
-git. Infine, solo se serve: valutare l'ibrido con embedding (Fase 4, ADR-003) per le tre cause
-residue di ranking non riverificate dal vivo (rubrica scollegata art. 633 c.p.c., variazione di
-lemma art. 110 c.p., diluizione art. 2087 c.c.), isolate ma non bloccanti. Nota: dopo `git pull` o
-modifiche, rilanciare `sync-context`. Ogni modifica a `fts.py`/`mcp_server.py` richiede il riavvio
-di Claude Desktop (anche dalla tray) per essere caricata dal server.
+git. Infine, solo se serve:
+valutare l'ibrido con embedding (Fase 4, ADR-003) per le tre cause residue di ranking non
+riverificate dal vivo (rubrica scollegata art. 633 c.p.c., variazione di lemma art. 110 c.p.,
+diluizione art. 2087 c.c.), isolate ma non bloccanti. Nota: dopo `git pull` o modifiche, rilanciare
+`sync-context`. Ogni modifica a `fts.py`/`mcp_server.py` richiede il riavvio di Claude Desktop
+(anche dalla tray) per essere caricata dal server.
