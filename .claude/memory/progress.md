@@ -6,6 +6,50 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-06 — Valutazione di prontezza per il go-live su macchina vergine
+
+Commit di riferimento: `c59778d` (nessun file di codice toccato, solo analisi). Contesto:
+l'utente ha chiesto cosa manca prima di un primo test reale su una macchina vergine con Claude
+Desktop installato e loggato con un piano Team. Risposta: il progetto è pronto per quel test,
+perché è l'unico ramo del flusso di installazione mai esercitato davvero. Tutte le verifiche
+precedenti di `install.ps1` (Fase C, e la verifica di robustezza del turno precedente) sono
+avvenute su questa macchina di sviluppo con git/uv/Python/Claude Desktop già presenti da prima:
+hanno validato solo i rami "già installato, salto" di `Ensure-Git`/`Ensure-Uv`, mai i rami reali
+di installazione (`winget install --id Git.Git`, script ufficiale di `uv`). Individuati tre
+rischi dichiarati come tali, non osservati: disponibilità/attivazione di `winget` su
+un'immagine Windows aziendale, `Refresh-Path` che potrebbe non intercettare un PATH scritto da
+un installer MSI in un punto diverso da Machine/User env, e rete dello studio con
+firewall/proxy che blocca `github.com` o fa SSL inspection sul clone di ~2 GB del corpus.
+Individuata anche una sequenza mai osservata dal vivo: login a Claude Desktop con account Team
+seguito dall'installer, dato che sulla macchina di sviluppo Claude Desktop era già configurato
+da sessioni precedenti. Due gap minori non bloccanti: licenza di `italia-corpus` verificata ora
+come MIT (permissiva, nessun problema per uso professionale) ma non documentata in nessun file
+del progetto; `legal-consultant` non ha un proprio file `LICENSE` (irrilevante per uso interno
+allo studio, da considerare solo se il repository dovesse circolare oltre lo studio che lo
+adotta). Nessuna azione di codice in questo passo: solo la valutazione, registrata su richiesta
+esplicita dell'utente prima di procedere al test.
+
+## 2026-07-06 — Nuovi documenti su flusso operativo, architettura a tre livelli e privacy
+
+Commit: `c59778d`. File toccati: `docs/flusso-e-architettura.md` (nuovo),
+`docs/mercato-privacy-e-token.md` (nuovo), `CLAUDE.md` (indice dei satelliti tracciati).
+Motivo: richiesta esplicita dell'utente di un flusso operativo completo per una postazione di
+studio legale, diagrammi a tre livelli di lettura del progetto (operativo, tecnico,
+linguistico), un confronto con gli strumenti di AI legale a pagamento e cloud-based, una
+ricerca di community/benchmark, e una stima di utilizzo giornaliero in token. Ricerca condotta
+con due agenti sequenziali (non in workflow parallelo, su richiesta esplicita dell'utente per
+economia di token): il primo sul panorama degli strumenti a pagamento (Harvey, CoCounsel,
+Lexis+ AI, vLex, Spellbook, Robin AI, Luminance, TeamSystem/Zucchetti/Wolters Kluwer in Italia)
+con modello dati e fonti citate; il secondo su evidenze di community (dev.to, Reddit, Hacker
+News) e una tabella di casi giudiziari reali di allucinazione AI con sanzioni fino a 110.000 $
+(fonte: database di Damien Charlotin). `docs/flusso-e-architettura.md` include due diagrammi
+mermaid nuovi (moduli di codice a livello tecnico, pipeline di parsing/query a livello
+linguistico) a complemento, non duplicazione, del diagramma di flusso dati as-built già in
+`HANDOFF.md` §4.1. La stima di token in `mercato-privacy-e-token.md` è ancorata a fatti
+verificabili nel codice (`snippet()` FTS5 a 16 token, `limit=8` di default in
+`cerca_normativa`) invece che a cifre di piano Anthropic non verificabili come attuali nel
+tempo.
+
 ## 2026-07-06 — Verifica di robustezza dell'installer su macchina reale non vergine
 
 Commit di riferimento: nessuno (verifica, nessun file di codice toccato). Contesto: l'utente ha

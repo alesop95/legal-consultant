@@ -134,12 +134,36 @@ comandi sono stati ridati e l'esito verificato con `git log` e confrontato con `
 di considerarlo chiuso (`bae3b34`, working tree pulito, push confermato allineato al remoto).
 
 Tutte le schede sono ri-ancorate a `bae3b34` (design-and-security.md resta valida a `69b154e`,
-nessun file delle sue covers-paths è cambiato dopo): nessun drift residuo all'inizio della
-prossima sessione. Primo, alla ripresa: il test Windows Sandbox su macchina vergine resta
-un'opzione residua, non più bloccante, se si vuole validare anche il percorso Download ZIP senza
-git. Infine, solo se serve:
-valutare l'ibrido con embedding (Fase 4, ADR-003) per le tre cause residue di ranking non
-riverificate dal vivo (rubrica scollegata art. 633 c.p.c., variazione di lemma art. 110 c.p.,
-diluizione art. 2087 c.c.), isolate ma non bloccanti. Nota: dopo `git pull` o modifiche, rilanciare
-`sync-context`. Ogni modifica a `fts.py`/`mcp_server.py` richiede il riavvio di Claude Desktop
-(anche dalla tray) per essere caricata dal server.
+nessun file delle sue covers-paths è cambiato dopo): nessun drift residuo. Dopo, in commit
+`c59778d`: due nuovi documenti tracciati sotto `docs/` (`flusso-e-architettura.md` con i tre
+diagrammi di livello operativo/tecnico/linguistico, `mercato-privacy-e-token.md` con il
+confronto di mercato, le evidenze di community/casi di allucinazione e la stima di token),
+indicizzati in `CLAUDE.md`.
+
+Punto di ripresa esatto: l'utente ha chiesto una valutazione di prontezza per il go-live su una
+macchina vergine con Claude Desktop installato e loggato con un piano Team, e la risposta è
+positiva con riserva d'osservazione, non un rinvio. Il progetto è pronto per quel test perché è
+l'unico ramo del flusso di installazione mai esercitato davvero: tutte le verifiche precedenti di
+`install.ps1` sono avvenute su questa macchina di sviluppo con git/uv/Python/Claude Desktop già
+presenti, validando solo i rami di skip di `Ensure-Git`/`Ensure-Uv`, mai l'installazione reale
+(`winget install --id Git.Git`, script ufficiale di `uv`). Tre rischi dichiarati ma non
+osservati, da tenere d'occhio durante il test: disponibilità/attivazione di `winget` su
+un'immagine Windows aziendale; `Refresh-Path` che potrebbe non intercettare un PATH scritto da
+un installer MSI fuori da Machine/User env; rete dello studio con firewall/proxy che blocca
+`github.com` o fa SSL inspection sul clone di ~2 GB del corpus. Consigliato di installare/loggare
+Claude Desktop con l'account Team per primo e aprirlo almeno una volta prima di lanciare
+`install.cmd`, per dare a `Find-ClaudeConfig` un file di configurazione già esistente da trovare
+invece che da creare da zero (sequenza mai osservata dal vivo finora). Due gap minori non
+bloccanti, aperti per una sessione futura se si vuole chiuderli: licenza di `italia-corpus`
+verificata come MIT (permissiva, nessun problema) ma non documentata in nessun file del
+progetto; `legal-consultant` non ha un proprio file `LICENSE` (irrilevante per uso interno allo
+studio, da considerare solo se il repository dovesse circolare oltre lo studio che lo adotta).
+Dettaglio completo in `current-work.md` e nel work-log del 2026-07-06.
+
+Primo, alla ripresa: eseguire il test di go-live sulla macchina vergine seguendo la sequenza
+sopra, osservando in particolare l'esito reale (non di skip) di `Ensure-Git`/`Ensure-Uv`.
+Infine, solo se serve: valutare l'ibrido con embedding (Fase 4, ADR-003) per le tre cause residue
+di ranking non riverificate dal vivo (rubrica scollegata art. 633 c.p.c., variazione di lemma
+art. 110 c.p., diluizione art. 2087 c.c.), isolate ma non bloccanti. Nota: dopo `git pull` o
+modifiche, rilanciare `sync-context`. Ogni modifica a `fts.py`/`mcp_server.py` richiede il
+riavvio di Claude Desktop (anche dalla tray) per essere caricata dal server.

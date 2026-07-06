@@ -163,6 +163,32 @@ Definition of done:
       (`Claude_pzs8sxrjxfjjc`), l'attività pianificata è stata ri-registrata senza duplicati.
       Effetto collaterale noto ripresentato e corretto: `uv sync` senza `--extra dev` ha rimosso
       `pytest`, ripristinato con `uv sync --extra dev`, 12 test verdi.
+- [x] Documenti su flusso operativo, architettura a tre livelli e privacy (`docs/`, commit
+      `c59778d`): `docs/flusso-e-architettura.md` (flusso di installazione e uso quotidiano su
+      una postazione di studio legale, diagrammi mermaid a livello operativo, tecnico —moduli di
+      codice, a complemento del diagramma di flusso dati as-built in `HANDOFF.md` §4.1— e
+      linguistico —pipeline di parsing/query, regex articoli, stopword, bonus di ranking, snippet
+      a 16 token) e `docs/mercato-privacy-e-token.md` (panorama degli strumenti di AI legale a
+      pagamento con fonti citate, evidenze di community e tabella di casi giudiziari di
+      allucinazione AI, argomento del vantaggio strutturale di privacy, stima di utilizzo
+      giornaliero in token ancorata a fatti verificabili nel codice). CLAUDE.md aggiornato con
+      l'indice dei due nuovi satelliti tracciati.
+- [ ] Valutazione di prontezza per il go-live su macchina vergine (2026-07-06, nessun commit,
+      solo analisi): il progetto è pronto per un primo test reale su una macchina vergine con
+      Claude Desktop installato e loggato con un piano Team, perché è l'unico ramo del flusso di
+      installazione mai esercitato davvero — tutte le verifiche precedenti di `install.ps1`
+      (Fase C e la verifica di robustezza sopra) sono avvenute su questa macchina di sviluppo con
+      git/uv/Python/Claude Desktop già presenti, validando solo i rami di skip di
+      `Ensure-Git`/`Ensure-Uv`, mai l'installazione reale (`winget install --id Git.Git`, script
+      ufficiale di `uv`). Tre rischi dichiarati come tali, non osservati: disponibilità/attivazione
+      di `winget` su un'immagine Windows aziendale; `Refresh-Path` che potrebbe non intercettare un
+      PATH scritto da un installer MSI fuori da Machine/User env; rete dello studio con
+      firewall/proxy che blocca `github.com` o fa SSL inspection sul clone di ~2 GB del corpus.
+      Sequenza mai osservata dal vivo: login a Claude Desktop con account Team seguito
+      dall'installer (sulla macchina di sviluppo Claude Desktop era già configurato da sessioni
+      precedenti). Due gap minori non bloccanti: licenza di `italia-corpus` verificata come MIT
+      (permissiva) ma non documentata in nessun file del progetto; `legal-consultant` non ha un
+      proprio file `LICENSE` (irrilevante per uso interno allo studio).
 
 Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali,
 l'installer e il ranking pesato, affinato e corretto (`995e154`, `0d0667a`), riconfermato dal vivo
