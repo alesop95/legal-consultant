@@ -8,8 +8,9 @@
 
 ```
 Branch attivo:         main
-Commit di riferimento: f7a4da9 (registrazione riconferma dal vivo del ranking, 5/6)
-Data snapshot:         2026-07-02
+Commit di riferimento: 057d8f6 (refresh del template di sistema; feature auto-update ancora
+                        pendente in working tree, vedi Punto di ripresa)
+Data snapshot:         2026-07-06
 ```
 
 ## Stato di verifica delle schede
@@ -20,11 +21,11 @@ le schede sono ri-ancorate a `f7a4da9`: nessun drift residuo.
 
 | Scheda | last-verified | Stato |
 |---|---|---|
-| STACK.md | f7a4da9 | allineata |
-| design-and-security.md | f7a4da9 | allineata (strati, update, mitigazioni, path lunghi) |
-| deployment.md | f7a4da9 | allineata (installer, setup, registrazione client) |
+| STACK.md | 69b154e | allineata (corpus clone non submodule, `update.pull` fetch+reset) |
+| design-and-security.md | 69b154e | allineata (clone non submodule, fetch+reset per collisioni di case) |
+| deployment.md | 69b154e | allineata (setup.py hardened, auto_update.py, clone non submodule) |
 | dev-testing.md | f7a4da9 | allineata (pytest 12, fixture, benchmark) |
-| current-work.md | f7a4da9 | contenuto aggiornato oltre `f7a4da9` (risultati Fase B), commit pendente |
+| current-work.md | f7a4da9 | contenuto aggiornato oltre `f7a4da9` (Fasi C/D, hardening, auto-update), commit pendente |
 | roadmap.md | f7a4da9 | allineata (benchmark misurato; ibrido come Fase 4) |
 
 ## Stato del corpus e dell'indice
@@ -97,16 +98,48 @@ sicurezza su richiesta esplicita dell'utente. Domanda aperta, senza risposta dal
 serva anche un canale di aggiornamento via git per il progetto legal-consultant stesso, non solo
 per il corpus (proposta di chiarimento fatta due volte, senza risposta).
 
-Codice e schede pendenti da committare: `src/legal_consultant/update/__init__.py`,
-`README.md`, `scripts/setup.py`, `current-work.md`, `roadmap.md`, `memory/index.md`,
-`memory/progress.md`, più i pendenti di Fase C (`HANDOFF.md`, `prompts/consulente-legale.md`,
-`src/legal_consultant/mcp_server.py`). Anche `.git/modules` locale da 419 MB (residuo del vecchio
-submodule del corpus, mai pulito, solo su questa macchina) segnalato ma non ancora ripulito, in
-attesa di conferma dell'utente. Primo, alla ripresa: l'utente committa; poi riavvio per abilitare
-Windows Sandbox e test da zero (download ZIP, non git clone, per validare anche quel percorso);
-poi chiarire il punto sull'account/canale git. Infine, solo se serve: valutare l'ibrido con
-embedding (Fase 4, ADR-003) per le tre cause residue di ranking non riverificate dal vivo (rubrica
-scollegata art. 633 c.p.c., variazione di lemma art. 110 c.p., diluizione art. 2087 c.c.), isolate
-ma non bloccanti. Nota: dopo `git pull` o modifiche, rilanciare `sync-context`. Ogni modifica a
-`fts.py`/`mcp_server.py` richiede il riavvio di Claude Desktop (anche dalla tray) per essere
-caricata dal server.
+Chiarito il punto sull'account/canale git: l'utente intendeva l'aggiornamento automatico e
+ricorrente dei dati (corpus + codici fondamentali), non un canale di distribuzione del progetto
+stesso. Implementato: nuovo `scripts/auto_update.py` (corpus a ogni giro, codici al più
+settimanale) registrato da `install.ps1` come attività pianificata di Windows
+(`ConsulenteLegale-Aggiornamento`, giornaliera alle 6:00, senza privilegi di amministratore),
+verificato end-to-end su questa macchina (registrazione, esecuzione manuale con
+`LastTaskResult: 0`, log corretto su due giri). `README.md` e `HANDOFF.md` aggiornati.
+
+Codice e schede pendenti da committare: `src/legal_consultant/update/__init__.py`, `README.md`,
+`scripts/setup.py`, `scripts/auto_update.py` (nuovo), `install.ps1`, `HANDOFF.md`,
+`current-work.md`, `roadmap.md`, `memory/index.md`, `memory/progress.md`, più i pendenti residui
+di Fase C (`prompts/consulente-legale.md`, `src/legal_consultant/mcp_server.py`). Anche
+`.git/modules` locale da 419 MB (residuo del vecchio submodule del corpus, mai pulito, solo su
+questa macchina) segnalato ma non ancora ripulito, in attesa di conferma dell'utente.
+
+Sessione del 2026-07-06: `sync-context` ha rilevato tre schede stale (STACK.md, deployment.md,
+design-and-security.md, ferme a `f7a4da9` e ancora sul linguaggio "submodule"/`pull --ff-only`
+superato dai commit `c281d37`/decisione clone-non-submodule); ri-ancorate a `69b154e` con delta
+edit chirurgici, nessuna riscrittura strutturale. Rilevato anche un blocco di modifiche estraneo
+in `.claude/templates/` (refresh dello scaffold di sistema da un meccanismo di sync a livello di
+account, non legato al prodotto): committato a parte (`057d8f6`). L'utente ha poi scelto di non
+attendere il riavvio per Windows Sandbox e di verificare la robustezza dell'installer
+("se trova una cosa installata non lo rifà") direttamente su questa macchina di sviluppo, dove
+git/uv sono già presenti: verifica isolata di `Ensure-Git`/`Ensure-Uv` (skip confermato, nessuna
+chiamata a winget/installer uv) e poi l'intero `install.ps1` end-to-end, con esito positivo su
+tutti e 5 gli step (dettaglio in `progress.md` e in `current-work.md`). Sostituisce nella
+sostanza, pur non essendo una macchina vergine in senso stretto, il test Fase C su macchina
+pulita rimasto sospeso.
+
+Anomalia da chiarire alla ripresa: il commit della feature di aggiornamento automatico
+(`scripts/auto_update.py`, `install.ps1`, `README.md`, `HANDOFF.md`, le quattro schede di
+`.claude/context/`, `memory/index.md`, `memory/progress.md`) segnalato dall'utente come già fatto
+non risulta in `git log`/`git reflog`: solo il commit del template (`057d8f6`) è realmente
+avvenuto sopra `69b154e`. Tutti quei file restano modificati in `git status`; i comandi per il
+commit sono stati riproposti nella chat ma non ancora confermati eseguiti a fine sessione.
+
+Primo, alla ripresa: verificare che l'utente abbia effettivamente committato il pendente sopra
+(confrontare `git log` con l'hash citato), poi eventualmente rilanciare `sync-context` per
+ri-ancorare `current-work.md` al nuovo HEAD. Il test Windows Sandbox su macchina vergine resta
+un'opzione residua, non più bloccante, se si vuole validare anche il percorso Download ZIP senza
+git. Infine, solo se serve: valutare l'ibrido con embedding (Fase 4, ADR-003) per le tre cause
+residue di ranking non riverificate dal vivo (rubrica scollegata art. 633 c.p.c., variazione di
+lemma art. 110 c.p., diluizione art. 2087 c.c.), isolate ma non bloccanti. Nota: dopo `git pull` o
+modifiche, rilanciare `sync-context`. Ogni modifica a `fts.py`/`mcp_server.py` richiede il riavvio
+di Claude Desktop (anche dalla tray) per essere caricata dal server.

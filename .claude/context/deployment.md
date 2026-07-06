@@ -6,7 +6,7 @@ covers-paths:
   - scripts/**
   - src/legal_consultant/mcp_server.py
   - .mcp.json
-last-verified-commit: f7a4da9
+last-verified-commit: 69b154e
 ---
 
 # Deployment
@@ -19,33 +19,41 @@ last-verified-commit: f7a4da9
 ## Livelli
 
 Un solo livello: locale su desktop Windows. Nessun ambiente cloud, nessuna CI. Il corpus vive come
-submodule sotto `data/italia-corpus`, l'indice SQLite FTS5 sotto `data/index/legge.sqlite` (path da
-`config.py`, override via `.env`). Claude Desktop avvia il server come sottoprocesso su stdio e ne
-consuma i tool; la chat passa per l'abbonamento Team, il resto non lascia la macchina.
+clone locale ignorato da git (non un submodule) sotto `data/italia-corpus`, l'indice SQLite FTS5
+sotto `data/index/legge.sqlite` (path da `config.py`, override via `.env`). Claude Desktop avvia il
+server come sottoprocesso su stdio e ne consuma i tool; la chat passa per l'abbonamento Team, il
+resto non lascia la macchina.
 
 ## Comandi
 
-Setup a un comando per l'utente finale, dopo aver clonato il repo: `uv run python scripts/setup.py`
-inizializza il submodule del corpus in shallow, sincronizza l'ambiente e costruisce l'indice. Su
-Windows gestisce da sé i nomi-file lunghi del corpus (oltre 260 caratteri): inizializza il
-submodule con `core.longpaths=true` e lo persiste nel clone, senza chiedere privilegi di
-amministratore né modifiche al registro.
-L'aggiunta iniziale del submodule (`git submodule add`) resta un passo manuale del manutentore,
-eseguito una volta, perché modifica `.gitmodules`. I singoli passi a mano: `uv sync --extra dev`
-per ambiente e strumenti di test; `uv run python scripts/bootstrap_index.py` per ricostruire
-l'indice da zero; `uv run python scripts/query.py "<query>" [limit]` per la sanità sull'indice;
-`uv run python -m legal_consultant.mcp_server` per avviare il server a mano in diagnosi (resta in
-ascolto su stdio; in uso normale è il client a lanciarlo).
+Setup a un comando per l'utente finale, dopo aver scaricato il progetto (anche senza git, via
+Download ZIP da GitHub): `uv run python scripts/setup.py` clona il corpus in shallow, sincronizza
+l'ambiente e costruisce l'indice. Verifica con `git rev-parse HEAD` che un clone preesistente sia
+davvero completo, rimuovendo e rifacendo quelli interrotti a metà, e configura un'identità git
+placeholder scoped al solo clone del corpus (mai globale), rete di sicurezza contro un'eventuale
+richiesta di credenziali su un clone HTTPS anonimo di sola lettura. Su Windows gestisce da sé i
+nomi-file lunghi del corpus (oltre 260 caratteri): clona con `core.longpaths=true` e lo persiste
+nel clone, senza chiedere privilegi di amministratore né modifiche al registro. I singoli passi a
+mano: `uv sync --extra dev` per ambiente e strumenti di test; `uv run python
+scripts/bootstrap_index.py` per ricostruire l'indice da zero; `uv run python scripts/query.py
+"<query>" [limit]` per la sanità sull'indice; `uv run python -m legal_consultant.mcp_server` per
+avviare il server a mano in diagnosi (resta in ascolto su stdio; in uso normale è il client a
+lanciarlo).
 
 Codici fondamentali: `uv run python scripts/fetch_codici.py` scarica da Normattiva (via `uvx
 normattiva2md`) il testo integrale di codice civile, penale, procedura civile, navigazione e penali
 militari, assenti come articolato in italia-corpus, e li salva in `data/codici-extra` (tracciato,
 indicizzato dal bootstrap). Si rilancia per aggiornarli, seguito da un reindex.
 
-Aggiornamento del corpus (Fase 3): `uv run python scripts/update_corpus.py` fa il pull del
-submodule, reindicizza i soli atti cambiati via `git diff` e salva lo stato in `state.json`. Si
-schedula con Windows Task Scheduler (esecuzione giornaliera del comando nella cartella del
-progetto) per tenere la legge aggiornata senza intervento.
+Aggiornamento del corpus (Fase 3): `uv run python scripts/update_corpus.py` allinea il clone locale
+del corpus all'ultimo commit del remoto con `fetch --depth 1` + `reset --hard @{u}` (non un
+`pull --ff-only`, che fallirebbe sempre per via di path del corpus che collidono per
+maiuscole/minuscole su un filesystem case-insensitive), reindicizza i soli atti cambiati via
+`git diff` e salva lo stato in `state.json`. `scripts/auto_update.py` orchestra la stessa logica
+senza presidio (corpus ad ogni giro, `fetch_codici.py` al più una volta alla settimana),
+registrato da `install.ps1` come attività pianificata di Windows
+(`ConsulenteLegale-Aggiornamento`, giornaliera alle 6:00, senza privilegi di amministratore) con
+fallback a un avviso non bloccante se la registrazione fallisse.
 
 ## Registrazione nel client
 

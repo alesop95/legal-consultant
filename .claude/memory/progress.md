@@ -6,6 +6,77 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-06 — Verifica di robustezza dell'installer su macchina reale non vergine
+
+Commit di riferimento: nessuno (verifica, nessun file di codice toccato). Contesto: l'utente ha
+scelto di procedere con un test reale su questa macchina di sviluppo invece di attendere il
+riavvio per Windows Sandbox, poiché git e uv sono già presenti ("il mio windows è quasi vergine
+sotto questo punto di vista... verifichiamo la robustezza del fatto che se trova una cosa
+installata non lo rifà"). Due passaggi.
+
+Primo, verifica isolata: estratte le sole definizioni di funzione di `install.ps1` (dot-source
+delle righe 1-136, senza eseguire il corpo principale) e lanciate `Ensure-Git`/`Ensure-Uv` a
+mano. Confermato che `Get-Command` intercetta git 2.54.0 e uv 0.11.21 già presenti e le funzioni
+ritornano subito con "gia' presente", senza invocare `winget` né l'installer di uv.
+
+Secondo, su richiesta esplicita di spingere la verifica end-to-end: lanciato l'intero
+`install.ps1` (tutti e 5 gli step nel flusso composto, incluso `Register-AutoUpdate` mai
+verificato prima dentro questo flusso, solo isolatamente). Esito, esente da errori (exit 0):
+step 1/5 e 2/5 skip confermati anche in composizione; step 3/5, `_corpus_presente` ha rilevato il
+clone esistente e saltato il download, `uv sync` ha rimosso `pytest` e le sue dipendenze (stesso
+effetto collaterale noto di Fase C, non un difetto nuovo, corretto qui con `uv sync --extra dev`
+subito dopo, 12 test verdi), l'indice si è ricostruito da zero per design (`bootstrap_index.py`
+non ha logica incrementale, cancella e riscrive sempre): 287.827 atti, 966.304 chunk, 23 errori
+noti (caratteri di controllo in alcuni filename storici, stesso conteggio delle esecuzioni
+precedenti), 266s; step 4/5, la voce `legge-it` è stata riscritta con backup automatico nel
+config della build Store di Claude Desktop (`Claude_pzs8sxrjxfjjc`); step 5/5, l'attività
+pianificata `ConsulenteLegale-Aggiornamento` è stata ri-registrata puliata (unregister + register,
+nessun duplicato). Risultato: la logica di rilevamento "se trovato, non rifare" è confermata
+empiricamente per git, uv e clone del corpus; l'unico passo sempre-rifatto (l'indice) lo è per
+scelta di design già nota, non per un difetto di rilevamento. Sostituisce nella sostanza, pur non
+essendo una macchina vergine in senso stretto, il test pianificato su Windows Sandbox (riavvio
+per abilitare la virtualizzazione ancora sospeso, non più bloccante per procedere).
+
+## 2026-07-06 — Ri-ancoraggio di tre schede stale (sync-context)
+
+Commit di riferimento: `69b154e` (nessun commit nuovo, solo edit delle schede). File toccati:
+`.claude/context/STACK.md`, `.claude/context/deployment.md`, `.claude/context/design-and-security.md`.
+Motivo: `sync-context` a inizio sessione ha rilevato che le tre schede, ferme a `f7a4da9`, parlavano
+ancora del corpus come submodule git e di `update.pull()` come `git pull --ff-only`, entrambi
+superati dai commit `c281d37` (fetch + reset --hard per la collisione di case su Windows) e dalla
+decisione precedente di trattare il corpus come clone locale ignorato da git, non un submodule.
+Corretto il linguaggio nelle tre schede (nessuna riscrittura strutturale) e aggiunta menzione di
+`scripts/auto_update.py` in STACK.md e deployment.md, a beneficio della sessione che committerà
+quella feature. `last-verified-commit` delle tre schede portato a `69b154e`. `current-work.md` non
+toccato in questo passo: il suo contenuto era già aggiornato oltre `f7a4da9` ma con un commit
+pendente separato (vedi voce sotto), quindi il suo ri-ancoraggio avverrà dopo quel commit.
+
+## 2026-07-03 — Aggiornamento automatico non presidiato (nuova feature)
+
+Commit: nessuno (pendente). File toccati: `scripts/auto_update.py` (nuovo), `install.ps1`,
+`README.md`, `HANDOFF.md`.
+Motivo: richiesta esplicita dell'utente, dopo due domande di chiarimento senza risposta a cui ha
+poi risposto direttamente: "il progetto... deve sempre aggiornarsi da solo con git rispetto alla
+repo del corpus e alle altre fonti", nel quadro del target reale (avvocati/studi legali, zero
+competenza tecnica, intervento manuale nullo per quanto possibile). Creato
+`scripts/auto_update.py`: orchestra l'aggiornamento del corpus principale (ogni esecuzione) e dei
+codici fondamentali (al più settimanale, tracciato in un marcatore locale, per non interrogare
+Normattiva e uno strumento di terze parti ogni giorno per contenuti che cambiano raramente),
+riusando `update.reindex_paths` anche per la collezione `EXTRA_CORPUS_PATH` (non un repo git: la
+funzione è pura, non lo richiede). Ogni fase e' isolata in try/except e loggata su
+`data/index/auto_update.log`, non solleva mai verso il chiamante, così un'esecuzione non presidiata
+non fallisce vistosamente per un problema di rete transitorio. Aggiunta a `install.ps1` la
+funzione `Register-AutoUpdate` (nuovo step 5/5): registra l'attività pianificata di Windows
+`ConsulenteLegale-Aggiornamento` (giornaliera alle 6:00, `-StartWhenAvailable`, nessun privilegio
+di amministratore, nessuna credenziale salvata: `-LogonType Interactive`), con fallback a un
+avviso non bloccante se la registrazione fallisse. Verificato end-to-end su questa macchina, da
+utente non amministratore: registrazione riuscita, esecuzione manuale via `Start-ScheduledTask`
+con `LastTaskResult: 0`, log corretto su due giri consecutivi (primo: corpus già aggiornato,
+codici scaricati e reindicizzati, 7428 chunk; secondo: codici correttamente saltati perché
+aggiornati da meno di una settimana). Attività lasciata registrata anche su questa macchina di
+sviluppo, uso reale previsto. `README.md` (sezione aggiornamento) e `HANDOFF.md` (diagramma
+as-built) aggiornati di conseguenza. 12 test verdi dopo ogni modifica.
+
 ## 2026-07-03 — Hardening scatola chiusa in preparazione del test su macchina vergine
 
 Commit: nessuno (pendente). File toccati: `README.md`, `scripts/setup.py`.

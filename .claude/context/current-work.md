@@ -130,6 +130,39 @@ Definition of done:
       un'eventuale richiesta di credenziali che un utente non tecnico non saprebbe gestire,
       pur non avendo trovato un caso concreto in cui oggi si presenti (il clone è HTTPS anonimo
       di sola lettura, non richiede mai identità). Test verdi dopo ogni modifica.
+- [x] Nuova feature: aggiornamento automatico non presidiato, su richiesta esplicita dell'utente
+      ("il progetto deve sempre aggiornarsi da solo rispetto alla repo del corpus e alle altre
+      fonti"). Nuovo script `scripts/auto_update.py`: orchestra `update.pull()` sul corpus
+      principale e, al più una volta alla settimana (marcatore locale, per non interrogare
+      Normattiva e uno strumento di terze parti ogni giorno per contenuti che cambiano
+      raramente), `fetch_codici.py` sui codici fondamentali, con reindicizzazione incrementale di
+      entrambi tramite `update.reindex_paths` (riusata anche per `EXTRA_CORPUS_PATH`, che non è
+      un repo git: la funzione è pura e non lo richiede). Non solleva mai eccezioni verso il
+      chiamante (ogni fase isolata in try/except, loggata su `data/index/auto_update.log`) così
+      un'attività pianificata non presidiata non fallisce mai vistosamente per un problema di
+      rete transitorio. `install.ps1` registra l'attività pianificata di Windows
+      (`ConsulenteLegale-Aggiornamento`, giornaliera alle 6:00, `-StartWhenAvailable` per i PC
+      spenti all'orario previsto) senza privilegi di amministratore, con fallback a un avviso non
+      bloccante se la registrazione fallisse (per esempio per policy aziendali sull'Utilità di
+      pianificazione). Verificato end-to-end su questa macchina: registrazione riuscita da utente
+      non amministratore, esecuzione manuale via `Start-ScheduledTask` con `LastTaskResult: 0`,
+      log corretto sia sul primo giro (corpus già aggiornato, codici scaricati e reindicizzati,
+      7428 chunk) sia sul secondo (codici correttamente saltati perché aggiornati da meno di 7
+      giorni). Lasciata registrata anche su questa macchina di sviluppo. `README.md` e
+      `HANDOFF.md` aggiornati di conseguenza. 12 test verdi.
+- [x] Verifica di robustezza dell'installer su macchina reale non vergine (2026-07-06), in
+      sostituzione pragmatica del test su Windows Sandbox rimasto sospeso per il riavvio non
+      ancora effettuato: isolate le funzioni `Ensure-Git`/`Ensure-Uv` di `install.ps1` (dot-source
+      senza eseguire il corpo principale) e confermato che, con git e uv già presenti su questa
+      macchina, ritornano subito senza invocare `winget` né l'installer di uv. Lanciato poi
+      l'intero `install.ps1` end-to-end (i 5 step nel flusso composto, incluso
+      `Register-AutoUpdate` mai verificato prima in composizione): exit 0, `_corpus_presente` ha
+      saltato correttamente il ri-download del corpus, l'indice si è ricostruito da zero per
+      design (287.827 atti, 966.304 chunk, 23 errori noti, 266s), la voce `legge-it` è stata
+      riscritta con backup nel config della build Store di Claude Desktop
+      (`Claude_pzs8sxrjxfjjc`), l'attività pianificata è stata ri-registrata senza duplicati.
+      Effetto collaterale noto ripresentato e corretto: `uv sync` senza `--extra dev` ha rimosso
+      `pytest`, ripristinato con `uv sync --extra dev`, 12 test verdi.
 
 Stato: prodotto completo e verificato end-to-end in Claude Desktop, con i codici fondamentali,
 l'installer e il ranking pesato, affinato e corretto (`995e154`, `0d0667a`), riconfermato dal vivo

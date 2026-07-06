@@ -151,9 +151,13 @@ flowchart TD
 
 Due percorsi restano fuori dal diagramma perché operativi, non conversazionali: il setup
 iniziale (`install.cmd`/`install.ps1` → `scripts/setup.py` → registrazione in
-`claude_desktop_config.json`, nodo D1) e l'aggiornamento periodico del corpus
-(`scripts/update_corpus.py`, nodo B3), entrambi pensati per girare senza intervento tecnico
-da parte dello studio legale che usa il prodotto.
+`claude_desktop_config.json`, nodo D1) e l'aggiornamento di corpus e codici (nodo B3), entrambi
+pensati per girare senza intervento tecnico da parte dello studio legale che usa il prodotto.
+L'aggiornamento non è più solo uno script da lanciare a mano: `install.ps1` registra
+un'attività pianificata di Windows (`ConsulenteLegale-Aggiornamento`, nessun privilegio di
+amministratore richiesto) che ogni giorno esegue `scripts/auto_update.py`, il quale orchestra
+`update.pull()` sul corpus principale e, al più una volta alla settimana, `fetch_codici.py` sui
+codici fondamentali, reindicizzando in automatico solo ciò che cambia.
 
 ---
 

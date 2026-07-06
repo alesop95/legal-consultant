@@ -4,7 +4,7 @@ generated-from-branch: main
 generated-date: 2026-06-25
 covers-paths:
   - src/legal_consultant/**
-last-verified-commit: f7a4da9
+last-verified-commit: 69b154e
 ---
 
 # Design e sicurezza applicativa
@@ -43,9 +43,14 @@ asterisco, operatori `NEAR`/`AND`), è reso inoffensivo da `to_match_query`: est
 alfanumerici e li cita come termini letterali, così un input non tecnico non può comporre una
 espressione MATCH invalida né iniettare operatori. I tool degradano con grazia quando l'indice non
 esiste, restituendo un messaggio diagnostico invece di sollevare eccezioni che risalirebbero al
-client, e la freschezza in `info_corpus` è best-effort: se git o il submodule mancano, ripiega su
-una fonte meno precisa senza fallire. Il package `update` esegue git come sottoprocesso solo sul
-percorso del corpus configurato, con `pull --ff-only` per non riscrivere mai la storia.
+client, e la freschezza in `info_corpus` è best-effort: se git o il clone del corpus mancano,
+ripiega su una fonte meno precisa senza fallire. Il package `update` esegue git come sottoprocesso
+solo sul percorso del corpus configurato, con `fetch --depth 1` + `reset --hard @{u}` invece di un
+`pull --ff-only`: il corpus contiene, nella stessa revisione, path che differiscono solo per
+maiuscole/minuscole, che su un filesystem case-insensitive come quello di Windows collidono
+fisicamente sullo stesso file e farebbero fallire sempre un fast-forward puro. Essendo il clone un
+mirror locale di sola lettura mai editato a mano, scartare le modifiche locali col reset è sicuro e
+non riscrive la storia del remoto.
 
 Portabilità su Windows: il corpus italiano ha nomi di file molto lunghi, che sul filesystem
 sforano il limite storico di 260 caratteri (MAX_PATH). Il prodotto lo aggira in modo trasparente,

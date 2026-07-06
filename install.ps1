@@ -5,6 +5,7 @@
 #   2. configura git per i percorsi lunghi (i nomi-file del corpus superano i 260 char)
 #   3. scarica il corpus, sincronizza l'ambiente e costruisce l'indice (scripts/setup.py)
 #   4. registra il server MCP "legge-it" in Claude Desktop, preservando gli altri server
+#   5. registra un'attivita' pianificata che aggiorna da solo corpus e codici ogni giorno
 #
 # All'utente resta un solo gesto finale: riavviare Claude Desktop.
 # Si lancia con un doppio clic su install.cmd, oppure:
@@ -25,7 +26,7 @@ function Refresh-Path {
 }
 
 function Ensure-Git {
-    Say "1/4  git"
+    Say "1/5  git"
     if (Get-Command git -ErrorAction SilentlyContinue) { Ok "git gia' presente"; return }
     Info "git non trovato, installo con winget..."
     winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
@@ -37,7 +38,7 @@ function Ensure-Git {
 }
 
 function Ensure-Uv {
-    Say "2/4  uv (Python)"
+    Say "2/5  uv (Python)"
     if (Get-Command uv -ErrorAction SilentlyContinue) { Ok "uv gia' presente"; return }
     Info "uv non trovato, installo dall'installer ufficiale..."
     Invoke-RestMethod https://astral.sh/uv/install.ps1 | Invoke-Expression
@@ -49,7 +50,7 @@ function Ensure-Uv {
 }
 
 function Setup-Project {
-    Say "3/4  Corpus, ambiente e indice"
+    Say "3/5  Corpus, ambiente e indice"
     # git per i percorsi lunghi, una volta per macchina (nessun admin).
     git config --global core.longpaths true
     Ok "git configurato per i percorsi lunghi"
@@ -78,7 +79,7 @@ function Find-ClaudeConfig {
 }
 
 function Register-ClaudeDesktop {
-    Say "4/4  Registrazione in Claude Desktop"
+    Say "4/5  Registrazione in Claude Desktop"
     $cfg = Find-ClaudeConfig
     $dir = Split-Path $cfg -Parent
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
@@ -106,11 +107,40 @@ function Register-ClaudeDesktop {
     Ok "Server 'legge-it' registrato in $cfg"
 }
 
+function Register-AutoUpdate {
+    Say "5/5  Aggiornamento automatico"
+    $taskName = "ConsulenteLegale-Aggiornamento"
+    try {
+        $uv = (Get-Command uv).Source
+        $action = New-ScheduledTaskAction -Execute $uv `
+            -Argument "--directory `"$Root`" run python scripts/auto_update.py" `
+            -WorkingDirectory $Root
+        $trigger = New-ScheduledTaskTrigger -Daily -At 6:00AM
+        $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable `
+            -ExecutionTimeLimit (New-TimeSpan -Hours 1)
+        $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" `
+            -LogonType Interactive
+
+        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger `
+            -Settings $settings -Principal $principal -Description (
+                "Aggiorna in automatico il corpus normativo e i codici fondamentali " +
+                "del Consulente Legale, una volta al giorno, senza intervento manuale."
+            ) | Out-Null
+        Ok "Attivita' pianificata registrata: aggiornamento ogni giorno alle 6:00 (quando il PC e' acceso e l'utente ha effettuato l'accesso)"
+    } catch {
+        Write-Host "  ATTENZIONE: non sono riuscito a registrare l'aggiornamento automatico ($($_.Exception.Message))." -ForegroundColor Yellow
+        Write-Host "  Non e' bloccante: il resto funziona comunque. Puoi aggiornare a mano con:" -ForegroundColor Yellow
+        Write-Host "  uv run python scripts/auto_update.py" -ForegroundColor Yellow
+    }
+}
+
 Write-Host "Consulente Legale - installazione" -ForegroundColor White
 Ensure-Git
 Ensure-Uv
 Setup-Project
 Register-ClaudeDesktop
+Register-AutoUpdate
 
 Write-Host "`nFatto." -ForegroundColor Green
 Write-Host "Ultimo passo manuale: chiudi del tutto Claude Desktop (anche dall'icona"

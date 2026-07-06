@@ -6,7 +6,7 @@ covers-paths:
   - src/legal_consultant/**
   - scripts/**
   - pyproject.toml
-last-verified-commit: f7a4da9
+last-verified-commit: 69b154e
 ---
 
 # Stack applicativo
@@ -78,15 +78,25 @@ punteggio corretto. Misurato su `scripts/benchmark_retrieval.py`: recall@1 10→
 sovra-campionamento legato a `limit` prima di questo fix.
 
 Il package `update` gestisce l'aggiornamento incrementale (Fase 3): `corpus_revision` legge commit
-e data dell'HEAD del corpus, `pull` fa il fast-forward del submodule, `changed_files` calcola via
-`git diff` i `.md` aggiunti/modificati/cancellati fra due revisioni, `reindex_paths` ritocca
-nell'indice i soli atti cambiati (upsert per path), e `read_state`/`write_state` persistono lo
-stato in `data/index/state.json` (commit, data, conteggi, timestamp del reindex). `scripts/setup.py`
-è il setup a un comando per l'utente finale (init submodule shallow, `uv sync`, bootstrap);
-`scripts/update_corpus.py` è l'aggiornamento schedulabile; `scripts/fetch_codici.py` scarica da
-Normattiva (via `normattiva2md`) i codici fondamentali il cui articolato manca in italia-corpus
-(civile, penale, procedura civile, navigazione, penali militari) e li salva in `EXTRA_CORPUS_PATH`
-(`data/codici-extra`, tracciato), che il bootstrap indicizza insieme al submodule. Il parser
+e data dell'HEAD del corpus, `pull` allinea il clone locale del corpus all'ultimo commit del
+remoto con `fetch --depth 1` + `reset --hard @{u}` (non più `pull --ff-only`: il corpus contiene
+path che differiscono solo per maiuscole/minuscole, che su un filesystem case-insensitive come
+quello di Windows collidono fisicamente sullo stesso file e lasciano sempre alcune voci
+"modificate" anche subito dopo un checkout pulito, facendo fallire un fast-forward puro),
+`changed_files` calcola via `git diff` i `.md` aggiunti/modificati/cancellati fra due revisioni,
+`reindex_paths` ritocca nell'indice i soli atti cambiati (upsert per path), e
+`read_state`/`write_state` persistono lo stato in `data/index/state.json` (commit, data, conteggi,
+timestamp del reindex). `scripts/setup.py` è il setup a un comando per l'utente finale: clona il
+corpus come clone locale ignorato da git (non un submodule) in shallow, verifica con
+`git rev-parse HEAD` che un clone preesistente sia davvero completo (rimuovendo e rifacendo quelli
+interrotti a metà), configura un'identità git placeholder scoped al solo clone, poi fa `uv sync` e
+il bootstrap dell'indice. `scripts/update_corpus.py` è l'aggiornamento manuale una tantum;
+`scripts/auto_update.py` è la stessa logica orchestrata senza presidio (corpus ad ogni giro,
+`fetch_codici.py` al più settimanale) e registrata da `install.ps1` come attività pianificata di
+Windows. `scripts/fetch_codici.py` scarica da Normattiva (via `normattiva2md`) i codici
+fondamentali il cui articolato manca in italia-corpus (civile, penale, procedura civile,
+navigazione, penali militari) e li salva in `EXTRA_CORPUS_PATH` (`data/codici-extra`, tracciato),
+che il bootstrap indicizza insieme al clone del corpus. Il parser
 riconosce gli articoli a 2-4 cancelletti con rubrica sia dopo il trattino (italia-corpus) sia tra
 parentesi (Normattiva). La registrazione in Claude Code è
 versionata in `.mcp.json` in radice; per Claude Desktop si usa la voce in `deployment.md`.

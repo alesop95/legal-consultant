@@ -105,12 +105,26 @@ o articolo per URN), `info_corpus` (ampiezza e freschezza della base normativa).
 
 ## Aggiornamento della normativa
 
+L'installazione Windows registra da sé un'attività pianificata (`ConsulenteLegale-Aggiornamento`)
+che ogni giorno alle 6:00, se il PC è acceso e l'utente ha effettuato l'accesso, aggiorna il
+corpus e — al più una volta alla settimana — i codici fondamentali, reindicizzando solo ciò che è
+cambiato. Non richiede alcun intervento manuale né privilegi di amministratore; l'esito di ogni
+esecuzione si trova in `data/index/auto_update.log`. Se la registrazione automatica fallisse (per
+esempio per una policy aziendale che limita l'Utilità di pianificazione), l'installer lo segnala
+ma prosegue comunque: l'aggiornamento va allora lanciato a mano, con lo stesso script che usa
+l'attività pianificata:
+
 ```bash
-uv run python scripts/update_corpus.py   # git pull del corpus + reindex incrementale
-uv run python scripts/fetch_codici.py     # ri-scarica i codici fondamentali da Normattiva
+uv run python scripts/auto_update.py      # corpus + codici, con la stessa logica dell'attività pianificata
 ```
 
-Il primo si può schedulare (Windows Task Scheduler) per tenere la legge aggiornata.
+Restano disponibili anche i due passaggi separati, utili per un aggiornamento mirato o per un
+sistema diverso da Windows:
+
+```bash
+uv run python scripts/update_corpus.py   # solo il corpus: fetch + reset incrementale
+uv run python scripts/fetch_codici.py     # ri-scarica i codici fondamentali da Normattiva
+```
 
 ## Limiti noti
 
