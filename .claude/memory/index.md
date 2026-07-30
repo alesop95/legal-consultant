@@ -167,3 +167,55 @@ di ranking non riverificate dal vivo (rubrica scollegata art. 633 c.p.c., variaz
 art. 110 c.p., diluizione art. 2087 c.c.), isolate ma non bloccanti. Nota: dopo `git pull` o
 modifiche, rilanciare `sync-context`. Ogni modifica a `fts.py`/`mcp_server.py` richiede il
 riavvio di Claude Desktop (anche dalla tray) per essere caricata dal server.
+
+## Sessione del 2026-07-29/30 — completezza del corpus
+
+Incarico esterno portato dall'utente in due file di desktop, scritti dal progetto tesi che aveva
+scoperto dall'esterno l'assenza della L. 194/1978. Chiesto di misurare il difetto, diagnosticarlo e
+renderlo non più silenzioso, non di aggiungere tre leggi.
+
+Audit (`docs/audit-completezza-corpus.md`): il corpus non contiene la legge ordinaria, il
+decreto-legge vigente e la Costituzione, perché rispecchia il catalogo delle 23 collezioni
+preconfezionate di Normattiva e in quel catalogo la legge ordinaria non figura. Mancavano 9.313
+leggi non abrogate su 13.730 (67,8%, di cui 2.755 modificate e vigenti), 1.584 decreti-legge non
+abrogati su 1.636 (96,8%) e l'unico atto della tipologia COSTITUZIONE. I 287.805 atti dichiarati
+sono file: gli atti distinti per URN sono 190.594. Corretta un'aspettativa dell'incarico: il codice
+di procedura penale c'è, perché è il DPR 447/1988.
+
+Correzione (ADR-005, `docs/completamento-corpus.md`): recupero dall'API Open Data ufficiale di
+Normattiva, scoperta durante l'audit e non prevista dall'incarico, con export massivo asincrono in
+Akoma Ntoso invece dello scraping per singolo atto. Nuovo package `src/legal_consultant/fonte/`,
+nuovi script `fetch_normattiva.py`, `fetch_atto.py` e `check_completezza.py`, nuova radice
+`data/normattiva-suppl` (ignorata da git), una sola regola aggiunta al parser condiviso (`## Allegato
+I` apre un chunk, perché le 18 disposizioni transitorie della Costituzione vivono negli allegati).
+30 test verdi. Recall di non-regressione invariato: 14/26, 19/26, 19/26 prima e dopo.
+
+Giurisprudenza (ADR-006, `docs/giurisprudenza-fattibilita.md`): analisi soltanto, nessun codice. Se
+si procederà, solo Corte costituzionale dagli open data ufficiali, tabella e tool distinti. Sulla
+Cassazione non c'è un rischio da soppesare ma un divieto scritto che nomina la riproduzione su
+supporto elettronico e il trattamento mediante sistemi di intelligenza artificiale.
+
+Validazione non provocata, la più significativa: l'attività pianificata di Windows già registrata su
+questa macchina ha eseguito da sola, la notte del 30 luglio alle 04:00 UTC, le fasi nuove nell'ordine
+previsto e ha scritto nel proprio registro che il corpus ha ancora lacune, indicando il comando per
+il dettaglio. Il percorso non presidiato funziona senza che nessuno lo tocchi.
+
+Limite operativo accertato e non superabile lato progetto: il filtro di protezione della fonte impone
+un tetto durevole per client sulla rotta di interrogazione dello stato di un export. Dopo un'attività
+sostenuta risponde 409 per decine di minuti, mentre ricerca ed export continuano a rispondere. Un
+recupero massivo va quindi distribuito su più giorni, e il codice lo riconosce: dopo otto rifiuti
+consecutivi interrompe il giro dichiarando che non è un errore del progetto. Alla chiusura della
+sessione sono recuperati la Costituzione (139 articoli + 18 allegati), la L. 194/1978, la L. 219/2017
+e circa novecento atti fra leggi e decreti-legge, partendo dai più recenti.
+
+Punto di ripresa, in ordine. Primo: committare il lavoro, che è tutto pendente (vedi la voce di
+work-log per l'elenco dei file). Secondo: lasciare convergere il popolamento con l'attività
+pianificata e controllare l'avanzamento con `uv run python scripts/check_completezza.py`, che alla
+chiusura della sessione riporta 18 atti sentinella ancora assenti fra cui L. 184/1983, L. 833/1978,
+L. 40/2004, L. 405/1975 e L. 24/2017. Terzo: quando le materie di interesse sono coperte, fare in
+Claude Desktop la verifica che finora manca, cioè una domanda di chat completa su una legge ordinaria,
+perché fin qui la L. 194/1978 è stata verificata attraverso il tool di ricerca e non in
+conversazione. Quarto, opzionale: estendere `scripts/benchmark_retrieval.py` con domande sulle classi
+recuperate, dato che le 26 attuali puntano tutte su codici e misurano la non-regressione e non il
+guadagno. Quinto, se l'utente lo vuole: aprire a monte la segnalazione della lacuna, il cui testo è
+pronto in `_notes/` e la cui pubblicazione è un'azione verso l'esterno che spetta a lui.

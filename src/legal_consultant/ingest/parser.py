@@ -34,6 +34,20 @@ _ARTICLE_RE = re.compile(
     r"(?:[—–-]\s*(?P<rub_dash>.+)|\((?P<rub_par>.+)\))?\s*$"
 )
 
+# Allegato numerato, per esempio `## Allegato I` o `## Allegato 2 (Tabella A)`. Vale come
+# confine di chunk allo stesso titolo di un articolo, perché un allegato è contenuto
+# normativo a sé: le diciotto disposizioni transitorie e finali della Costituzione stanno
+# tutte negli allegati. Senza questo confine finirebbero in coda all'ultimo articolo e
+# verrebbero citate col numero di quello, cioè con una citazione falsa. L'unità citabile
+# risultante è "Allegato I", che è come la fonte stessa la nomina.
+# Il numero è obbligatorio: una intestazione di sola rassegna come `## Allegati`, presente
+# nei codici, non corrisponde e resta testo.
+_ALLEGATO_RE = re.compile(
+    r"^#{2,4}\s+Allegato\s+(?P<num>[\w\-]+)\.?\s*"
+    r"(?:[—–-]\s*(?P<rub_dash>.+)|\((?P<rub_par>.+)\))?\s*$",
+    re.IGNORECASE,
+)
+
 # Collezione del corpus che raccoglie le leggi abrogate. Nel frontmatter di italia-corpus
 # il campo `vigente` risulta True anche per questi atti, quindi non è affidabile per
 # escluderli: l'appartenenza a questa collezione è il segnale corretto, e qui declassa
@@ -110,10 +124,15 @@ def _split_chunks(body: str) -> list[Chunk]:
         buf = []
 
     for line in body.splitlines():
-        m = _ARTICLE_RE.match(line.strip())
+        stripped = line.strip()
+        m = _ARTICLE_RE.match(stripped)
+        etichetta = ""
+        if m is None:
+            m = _ALLEGATO_RE.match(stripped)
+            etichetta = "Allegato "
         if m:
             flush()
-            cur_articolo = m.group("num").strip()
+            cur_articolo = etichetta + m.group("num").strip()
             rub = (m.group("rub_dash") or m.group("rub_par") or "").strip()
             cur_rubrica = rub or None
         else:

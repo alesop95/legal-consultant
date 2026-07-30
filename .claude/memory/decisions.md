@@ -64,3 +64,75 @@ Motivazione: nessuno scraper da costruire; aggiornamento incrementale economico;
 che semplifica l'MVP.
 Conseguenze: copertura aggiornata fino all'ultimo pull (per le ultimissime novità si valuta il
 web search di Claude Desktop, opzionale); estensione UE rinviata.
+
+## ADR-005 — Completamento del corpus dall'API Open Data di Normattiva, a valle
+
+Data: 2026-07-30
+Stato: accettata
+Contesto: un audit sistematico (`docs/audit-completezza-corpus.md`) ha accertato che
+`italia-corpus` non contiene la legge ordinaria, il decreto-legge vigente e la Costituzione:
+mancavano 9.310 leggi non abrogate su 13.730, 1.584 decreti-legge non abrogati su 1.636 e
+l'unico atto della tipologia COSTITUZIONE. La causa non è un difetto dello script che genera
+il corpus, che è un mirror fedele, ma il fatto che rispecchia il catalogo delle 23 collezioni
+preconfezionate esposte da Normattiva, nel quale la legge ordinaria non figura. L'incompletezza
+era silenziosa: il prodotto dichiarava 287.805 atti e nulla segnalava le assenze, che la
+ricerca per parole chiave mascherava restituendo atti pertinenti al tema ma diversi da quello
+cercato (per l'IVG restituiva l'atto che modifica la L. 194/1978 e non la L. 194/1978).
+L'audit ha anche rivelato una terza strada che l'incarico non contemplava: Normattiva pubblica
+da dicembre 2024 un'API Open Data documentata, senza credenziali, con ricerca avanzata per
+tipologia ed export massivo asincrono in Akoma Ntoso.
+Decisione: recuperare le classi mancanti a valle, in questo progetto, dall'API Open Data
+ufficiale, e non raschiando l'export per singolo atto del sito. Gli atti vengono convertiti nel
+medesimo Markdown con frontmatter del corpus e scritti in una radice separata
+(`data/normattiva-suppl`, ignorata da git), indicizzata insieme alle altre. Si aggiunge un
+controllo di completezza rilanciabile (`scripts/check_completezza.py`) che ricava l'elenco delle
+tipologie attese dalla fonte a ogni esecuzione, verifica una lista di atti notori uno per uno, e
+esce con codice di errore nominando la classe mancante e l'atto atteso non trovato. La
+correzione a monte non viene messa sul percorso critico.
+Motivazione: correggere a monte non sarebbe la riparazione di un baco ma la riscrittura del modo
+in cui il corpus viene generato, e quel repository non ha mai processato una pull request in
+tutta la sua storia, non tocca codice da cinque settimane e ha il job di sincronizzazione fermo
+da undici giorni con due segnalazioni di terzi senza risposta. L'export massivo dell'API chiude
+la lacuna in poche decine di richieste invece delle ventiduemila che avrebbe richiesto lo
+scraping per singolo atto, restituisce lo stesso XML strutturato, ed è la via che la fonte
+stessa documenta per lo scarico massivo.
+Conseguenze: il progetto acquisisce una dipendenza di rete da un'API di terzi, mitigata dal fatto
+che non richiede credenziali, non invia email né dati personali, e usa solo `urllib` di stdlib.
+Il popolamento iniziale è progressivo perché il recupero storico dal 1861 dura ore: l'installer
+ne fa una parte a budget e l'attività pianificata converge nei giorni successivi, mentre il
+controllo di completezza rende visibile quanto resta invece di lasciarlo implicito. Il parser
+condiviso è stato esteso di una regola (una intestazione `## Allegato I` apre un chunk proprio),
+necessaria perché le diciotto disposizioni transitorie della Costituzione vivono negli allegati e
+altrimenti verrebbero citate col numero dell'ultimo articolo. Resta aperta, come atto di igiene
+verso un dataset pubblico e non come dipendenza, una segnalazione a monte della lacuna: il testo
+è pronto in `_notes/`, l'apertura della issue spetta all'utente. Supera in parte ADR-004, che
+descriveva il corpus come fonte unica e autosufficiente.
+
+## ADR-006 — Giurisprudenza limitata alla sola Corte costituzionale, e non ora
+
+Data: 2026-07-30
+Stato: accettata
+Contesto: il corpus non contiene alcuna giurisprudenza. Un'analisi di fattibilità
+(`docs/giurisprudenza-fattibilita.md`) ha verificato fonti, licenze, tenuta dello schema dati e
+adeguatezza della ricerca lessicale.
+Decisione: se e quando si estenderà il prodotto alla giurisprudenza, lo si farà sulla sola Corte
+costituzionale, dagli open data ufficiali di `dati.cortecostituzionale.it` (licenza CC BY-SA 3.0
+dichiarata), in una tabella FTS5 distinta con un tool MCP distinto e i riferimenti normativi in
+una tabella relazionale ordinaria. Non si procede su Corte di cassazione, giurisprudenza di
+merito e dottrina. Nessuna implementazione viene avviata adesso.
+Motivazione: per la Cassazione non c'è un rischio da soppesare ma un divieto scritto, che nomina
+per esteso la riproduzione su supporto adatto all'elaborazione elettronica e il trattamento
+mediante sistemi di intelligenza artificiale, cioè le due operazioni che questo prodotto compie;
+e il canale pubblico contiene comunque solo una finestra scorrevole di cinque anni senza massime,
+quindi sarebbe strutturalmente incapace di mostrare un orientamento. Il merito è dietro identità
+digitale senza licenza di riuso, e una sentenza di tribunale non è precedente. Lo schema `chunks`
+non regge le sentenze: il titolo di una massima ha mediana di 55 token contro i 4 delle rubriche
+normative, quindi il bonus di rubrica sarebbe inerte mentre il peso 12 della colonna
+danneggerebbe il ranking della normativa già funzionante; il campo `vigente` non ha analogo
+onesto, perché l'overruling non è un evento con una data ma un processo diffuso, e una citazione
+verificabile a una sentenza superata è peggio di nessuna citazione, dato che il passo di verifica
+riesce e conferma l'errore.
+Conseguenze: il prodotto resta dichiaratamente di sola normativa, e il disclaimer deve dirlo
+invece di lasciarlo intendere. Se si procederà sulla Corte costituzionale, va deciso prima come la
+clausola share-alike della licenza interagisce con la voce di roadmap sulla distribuzione di un
+indice pre-costruito, che sarebbe un'opera derivata.

@@ -30,6 +30,11 @@ from legal_consultant.index import fts
 LOG_PATH = Path(REPO_ROOT) / "data" / "index" / "auto_update.log"
 _CODICI_MARKER = Path(REPO_ROOT) / "data" / "index" / "last_codici_fetch.txt"
 _CODICI_INTERVAL_DAYS = 7
+# Minuti concessi a ogni giro per il recupero storico delle classi mancanti. Tenuto basso
+# perche' l'attivita' e' pianificata di notte ma la macchina di uno studio legale puo'
+# essere accesa e in uso: si preferisce convergere in qualche giorno senza mai occupare la
+# rete per ore di seguito.
+_SUPPL_BUDGET_MINUTI = 30
 
 
 def _log(msg: str) -> None:
@@ -111,9 +116,60 @@ def _update_codici() -> None:
     _CODICI_MARKER.write_text(datetime.now(timezone.utc).isoformat(), encoding="utf-8")
 
 
+def _update_suppl() -> None:
+    """Rinfresca la collezione supplementare recuperata da Normattiva.
+
+    Si limita all'anno corrente e al precedente, che è dove compaiono gli atti nuovi:
+    sono due richieste di export invece di centosessanta, quindi si può fare ogni giorno
+    senza pesare sulla fonte. Il recupero storico completo si lancia a mano una volta con
+    `scripts/fetch_normattiva.py` senza `--da`.
+    """
+    if not Path(INDEX_PATH).exists():
+        _log("indice non ancora pronto, salto il rinfresco della collezione supplementare.")
+        return
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import fetch_normattiva  # script gemello in scripts/, non un pacchetto
+
+    anno_da = datetime.now(timezone.utc).year - 1
+    rc = fetch_normattiva.main(["--da", str(anno_da)])
+    _log(f"fetch_normattiva.py --da {anno_da} completato (codice di uscita {rc}).")
+
+    # Recupero storico a budget: il primo popolamento completo richiede ore e l'installer
+    # ne fa solo una parte, quindi ogni giro ne completa un altro pezzo finche' non resta
+    # nulla. Quando le lacune sono chiuse questa chiamata costa solo l'enumerazione.
+    rc = fetch_normattiva.main(["--minuti", str(_SUPPL_BUDGET_MINUTI)])
+    _log(f"recupero storico a budget completato (codice di uscita {rc}).")
+
+
+def _controllo_completezza() -> None:
+    """Registra nel log l'esito del controllo di completezza.
+
+    Non corregge e non fallisce: serve perché una regressione della copertura resti
+    scritta da qualche parte invece di restare invisibile, che è esattamente il difetto
+    da cui è nata questa parte del progetto.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import check_completezza
+
+    rc = check_completezza.main(["--quiet"])
+    if rc == 0:
+        _log("controllo di completezza: corpus completo.")
+    elif rc == 1:
+        _log("ATTENZIONE, controllo di completezza: il corpus ha lacune. "
+             "Lancia `uv run python scripts/check_completezza.py` per il dettaglio.")
+    else:
+        _log("controllo di completezza non eseguibile in questo giro.")
+
+
 def main() -> int:
     _log("=== avvio aggiornamento automatico ===")
-    for fase, fn in (("corpus", _update_corpus), ("codici", _update_codici)):
+    for fase, fn in (
+        ("corpus", _update_corpus),
+        ("codici", _update_codici),
+        ("supplementare", _update_suppl),
+        ("completezza", _controllo_completezza),
+    ):
         try:
             fn()
         except Exception:  # noqa: BLE001 - non deve mai far fallire l'attivita' pianificata

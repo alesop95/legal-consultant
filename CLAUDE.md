@@ -53,6 +53,12 @@ docs/flusso-e-architettura.md      flusso operativo su una postazione di studio 
                                     diagrammi a livello operativo, tecnico, linguistico
 docs/mercato-privacy-e-token.md    confronto con l'AI legale a pagamento, evidenze di
                                     community, vantaggio di privacy, stima di utilizzo giornaliero
+docs/audit-completezza-corpus.md   misura di quanto della legislazione il corpus contiene
+                                    davvero, per tipologia, e diagnosi della causa a monte
+docs/completamento-corpus.md       come si colmano le lacune: scelta fra le strade, API Open
+                                    Data di Normattiva, controllo di completezza rumoroso
+docs/giurisprudenza-fattibilita.md fonti, licenze e limiti di un'eventuale estensione alla
+                                    giurisprudenza; conclusione restrittiva e motivata
 ```
 
 Memoria e meta-stato, sotto `.claude/memory/`, letti sempre a inizio sessione.

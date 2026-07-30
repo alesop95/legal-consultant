@@ -98,8 +98,38 @@ fondamentali il cui articolato manca in italia-corpus (civile, penale, procedura
 navigazione, penali militari) e li salva in `EXTRA_CORPUS_PATH` (`data/codici-extra`, tracciato),
 che il bootstrap indicizza insieme al clone del corpus. Il parser
 riconosce gli articoli a 2-4 cancelletti con rubrica sia dopo il trattino (italia-corpus) sia tra
-parentesi (Normattiva). La registrazione in Claude Code è
+parentesi (Normattiva), e riconosce come confine di chunk anche una intestazione `## Allegato I`,
+perché gli allegati portano contenuto normativo a sé (le diciotto disposizioni transitorie della
+Costituzione stanno lì) che altrimenti finirebbe in coda all'ultimo articolo e ne prenderebbe il
+numero in citazione; il numero è obbligatorio, così `## Allegati` dei codici resta testo. La
+registrazione in Claude Code è
 versionata in `.mcp.json` in radice; per Claude Desktop si usa la voce in `deployment.md`.
+
+Il package `fonte` copre le classi di atti che italia-corpus non contiene affatto, perché
+rispecchia il catalogo delle collezioni preconfezionate di Normattiva e quel catalogo non
+comprende la legge ordinaria (misura e diagnosi in `docs/audit-completezza-corpus.md`).
+`fonte/normattiva.py` è il client dell'API Open Data pubblica di Normattiva, scritto con il solo
+`urllib` di stdlib: espone la tipologica delle denominazioni di atto (l'elenco canonico contro cui
+misurare la completezza, letto dalla fonte a ogni esecuzione e non cablato), la ricerca avanzata
+per conteggio ed enumerazione paginata fino a mille elementi, e l'export asincrono che restituisce
+un archivio ZIP di file Akoma Ntoso consolidati alla vigenza richiesta. Il polling sullo stato
+dell'export è deliberatamente lento (25s iniziali, fino a 90s) e tratta l'HTTP 409 del WAF come
+"non ancora pronto": misurato, un polling ogni due secondi riceve 409 per oltre due minuti senza
+mai vedere un export già pronto, quindi interrogare meno spesso è più veloce. `fonte/akn.py`
+converte l'XML nello stesso Markdown con frontmatter del corpus, preservando i numeri di comma,
+escludendo il contenuto delle note (Normattiva vi annida il testo integrale delle norme richiamate,
+che in un indice per articolo è rumore che sposta il ranking) e ricostruendo la rubrica dal primo
+capoverso non numerato solo sotto condizioni strette. `fonte/recupero.py` scrive gli atti in
+`SUPPL_CORPUS_PATH` (`data/normattiva-suppl`, ignorato da git perché voluminoso e rigenerabile) e
+raggruppa le lacune in lotti contigui per data, con una lista bianca di URN ammesse che è un
+requisito di correttezza e non un'ottimizzazione: l'export di un periodo contiene anche gli atti
+abrogati, e scriverli col frontmatter `vigente: true` sarebbe peggio della loro assenza.
+`config.radici_corpus()` restituisce tutte le radici da indicizzare, così bootstrap e aggiornamento
+non nominano i singoli percorsi. Gli script sono `scripts/fetch_normattiva.py` (recupero massivo,
+con `--dry-run` per misurare e `--minuti` per lavorare a budget, dato che il recupero storico dal
+1861 dura ore), `scripts/fetch_atto.py` (un singolo atto per URN, che generalizza ciò che
+`fetch_codici.py` fa solo sui cinque codici) e `scripts/check_completezza.py` (il controllo che
+fallisce dicendo cosa manca).
 
 ## Riferimenti a snippet
 

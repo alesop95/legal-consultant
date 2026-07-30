@@ -14,6 +14,15 @@ Realizzato come **MCP server locale** interrogato da **Claude Desktop**.
 - **Codici fondamentali inclusi:** civile, penale, procedura civile, navigazione e penali
   militari, il cui articolato manca in italia-corpus, sono scaricati da Normattiva e
   versionati nel repo (`data/codici-extra`).
+- **Lacune di italia-corpus colmate dalla fonte ufficiale:** il corpus di terze parti
+  rispecchia il catalogo delle collezioni preconfezionate di Normattiva, che non comprende
+  la legge ordinaria, il decreto-legge vigente e la Costituzione. Queste classi vengono
+  recuperate dall'API Open Data di Normattiva (`scripts/fetch_normattiva.py`) e indicizzate
+  accanto alle altre. La misura della lacuna è in
+  **[docs/audit-completezza-corpus.md](docs/audit-completezza-corpus.md)**.
+- **Completezza verificabile a comando:** `scripts/check_completezza.py` confronta il corpus
+  con le tipologie dichiarate dalla fonte e con una lista di atti notori, e fallisce dicendo
+  cosa manca invece di restituire un totale rassicurante.
 
 > ⚠️ Strumento informativo, **non costituisce consulenza legale**. Per uso professionale
 > fare sempre riferimento alla *Gazzetta Ufficiale* / [Normattiva](https://www.normattiva.it).
@@ -122,12 +131,35 @@ Restano disponibili anche i due passaggi separati, utili per un aggiornamento mi
 sistema diverso da Windows:
 
 ```bash
-uv run python scripts/update_corpus.py   # solo il corpus: fetch + reset incrementale
-uv run python scripts/fetch_codici.py     # ri-scarica i codici fondamentali da Normattiva
+uv run python scripts/update_corpus.py     # solo il corpus: fetch + reset incrementale
+uv run python scripts/fetch_codici.py      # ri-scarica i codici fondamentali da Normattiva
+uv run python scripts/fetch_normattiva.py  # colma le classi assenti da italia-corpus
+uv run python scripts/fetch_atto.py <urn>  # recupera un singolo atto dato il suo URN
 ```
+
+## Verificare che la base normativa sia completa
+
+```bash
+uv run python scripts/check_completezza.py
+```
+
+Confronta le tipologie di atto che Normattiva dichiara con quelle presenti nell'indice, e
+verifica una per una una lista di leggi che uno studio consulta davvero. Esce con codice 1 e
+dice quale classe manca e quale atto atteso non si trova. È il rimedio a un difetto reale del
+corpus di terze parti, documentato in
+**[docs/audit-completezza-corpus.md](docs/audit-completezza-corpus.md)**: dichiarava sync
+completo mentre mancavano oltre novemila leggi vigenti, e nulla lo segnalava.
+
+Al primo avvio il recupero delle classi mancanti è progressivo: l'installer ne fa una parte a
+partire dagli anni recenti e l'attività pianificata completa il resto nei giorni successivi,
+perché il recupero storico dal 1861 richiede ore. Finché non è finito, il comando qui sopra
+dice esattamente quanto resta.
 
 ## Limiti noti
 
 Il filtro dei soli atti vigenti esclude la collezione delle abrogate, ma non garantisce la
 vigenza odierna di ogni singolo atto: verificare sempre su Normattiva. La ricerca è lessicale
-(BM25): per l'articolo esatto di un codice il consulente usa `leggi_atto`.
+(BM25): per l'articolo esatto di un codice il consulente usa `leggi_atto`. Il corpus contiene
+solo testo legislativo: nessuna giurisprudenza e nessuna dottrina, e le ragioni per cui
+l'estensione è stata circoscritta alla sola Corte costituzionale sono in
+**[docs/giurisprudenza-fattibilita.md](docs/giurisprudenza-fattibilita.md)**.

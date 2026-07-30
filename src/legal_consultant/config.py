@@ -61,5 +61,24 @@ CORPUS_PATH = _resolve("CORPUS_PATH", "data/italia-corpus")
 # penale, ecc.) il cui articolato manca in italia-corpus, scaricati da Normattiva con
 # scripts/fetch_codici.py e indicizzati dal bootstrap insieme al corpus principale.
 EXTRA_CORPUS_PATH = _resolve("EXTRA_CORPUS_PATH", "data/codici-extra")
+# Seconda collezione supplementare: ospita le classi di atti che il corpus principale non
+# contiene affatto perche' assenti dal catalogo delle collezioni preconfezionate di
+# Normattiva (leggi ordinarie, decreti-legge vigenti, Costituzione), recuperate
+# dall'API Open Data con scripts/fetch_normattiva.py. Vedi
+# docs/audit-completezza-corpus.md per la misura della lacuna e la sua causa.
+# A differenza di codici-extra, che e' piccola e tracciata, questa e' voluminosa
+# (oltre diecimila atti) e resta fuori da git, come il corpus principale: si ricostruisce
+# dalla fonte, non si spedisce nel repository.
+SUPPL_CORPUS_PATH = _resolve("SUPPL_CORPUS_PATH", "data/normattiva-suppl")
 INDEX_PATH = _resolve("INDEX_PATH", "data/index/legge.sqlite")
 STATE_PATH = _resolve("STATE_PATH", "data/index/state.json")
+
+
+def radici_corpus() -> list[Path]:
+    """Tutte le radici di corpus da indicizzare, nell'ordine in cui vanno lette.
+
+    Il corpus principale piu' le collezioni supplementari che esistono su disco. Chi
+    indicizza itera su questa lista invece di conoscere i singoli percorsi, cosi'
+    aggiungere una collezione non richiede di ritoccare ogni chiamante.
+    """
+    return [p for p in (CORPUS_PATH, EXTRA_CORPUS_PATH, SUPPL_CORPUS_PATH) if p.is_dir()]

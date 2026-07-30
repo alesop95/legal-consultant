@@ -18,6 +18,11 @@ _notes/.tmp-docx-*/
 # Normattiva in data/codici-extra sono invece TRACCIATI (piccoli, stabili, spediti col repo).
 data/index/
 data/italia-corpus/
+# Le classi di atti che il corpus principale non contiene (leggi ordinarie, decreti-legge
+# vigenti, Costituzione), recuperate dall'API Open Data di Normattiva con
+# scripts/fetch_normattiva.py: oltre diecimila atti, si ricostruiscono dalla fonte e non
+# si spediscono nel repository. Vedi docs/audit-completezza-corpus.md.
+data/normattiva-suppl/
 
 # === Python (versiona il manifesto, ignora il derivato — §13) ===
 .venv/

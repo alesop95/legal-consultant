@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 
 from legal_consultant import update
-from legal_consultant.config import CORPUS_PATH, EXTRA_CORPUS_PATH, INDEX_PATH, STATE_PATH
+from legal_consultant.config import CORPUS_PATH, INDEX_PATH, STATE_PATH, radici_corpus
 from legal_consultant.index import fts
 from legal_consultant.ingest.parser import parse_act
 
@@ -43,11 +43,16 @@ def main() -> int:
     fts.init_db(conn)
 
     pairs = _collect(corpus)
-    extra = Path(EXTRA_CORPUS_PATH)
-    if extra.is_dir():
-        extra_pairs = _collect(extra)
-        pairs += extra_pairs
-        print(f"Collezione supplementare {extra.name}: {len(extra_pairs)} atti")
+    # Collezioni supplementari: i codici fondamentali (data/codici-extra) e le classi di
+    # atti assenti dal corpus principale recuperate da Normattiva (data/normattiva-suppl).
+    # Si itera su config.radici_corpus() invece di nominarle una per una, così aggiungerne
+    # una non richiede di ritoccare questo file.
+    for radice in radici_corpus():
+        if radice == corpus:
+            continue
+        suppl_pairs = _collect(radice)
+        pairs += suppl_pairs
+        print(f"Collezione supplementare {radice.name}: {len(suppl_pairs)} atti")
     total = len(pairs)
     print(f"Atti da indicizzare: {total}")
 

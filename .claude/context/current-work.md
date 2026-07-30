@@ -6,8 +6,12 @@ covers-paths:
   - src/legal_consultant/mcp_server.py
   - src/legal_consultant/index/**
   - src/legal_consultant/update/**
+  - src/legal_consultant/fonte/**
   - scripts/setup.py
   - scripts/update_corpus.py
+  - scripts/fetch_normattiva.py
+  - scripts/fetch_atto.py
+  - scripts/check_completezza.py
   - .mcp.json
   - prompts/**
 last-verified-commit: bae3b34
@@ -247,6 +251,74 @@ Fase B conclusa: 8/8 domande superate. Nessun comportamento fuori disciplina (ni
 memoria non dichiarate, niente ricerca web, disclaimer sempre presente e corretto); due dei quattro
 casi critici residui di Fase A risolti in pratica dalle istruzioni del Project senza l'ibrido con
 embedding.
+
+## Feature: completezza del corpus (audit, recupero dalla fonte, controllo rumoroso)
+
+Cosa fa: colma le classi di atti che `italia-corpus` non contiene affatto e rende l'eventuale
+incompletezza residua rilevabile a comando invece che silenziosa. Il corpus di terze parti
+rispecchia il catalogo delle 23 collezioni preconfezionate di Normattiva, nel quale la legge
+ordinaria non figura: mancavano 9.313 leggi non abrogate su 13.730, 1.584 decreti-legge vigenti su
+1.636 e la Costituzione. Misura e diagnosi in `docs/audit-completezza-corpus.md`, correzione e
+architettura in `docs/completamento-corpus.md`, decisione in ADR-005.
+
+File creati:
+
+```
+src/legal_consultant/fonte/normattiva.py   client dell'API Open Data (tipologiche, ricerca, export asincrono)
+src/legal_consultant/fonte/akn.py          Akoma Ntoso -> Markdown con frontmatter del corpus
+src/legal_consultant/fonte/recupero.py     scrittura nella collezione locale, lotti, lista bianca
+scripts/fetch_normattiva.py                recupero massivo delle classi mancanti, a lotti e a budget
+scripts/fetch_atto.py                      recupero e reindicizzazione di un singolo atto per URN
+scripts/check_completezza.py               controllo che esce 1 dicendo cosa manca
+tests/test_fonte.py                        18 test sulla conversione e sulle parti pure del recupero
+tests/fixtures-akn/legge-2026-101.akn.xml  export reale della fonte, usato come fixture
+docs/audit-completezza-corpus.md           esito dell'audit, per tipologia, con la diagnosi
+docs/completamento-corpus.md               scelta fra le strade, architettura, comandi, recall
+docs/giurisprudenza-fattibilita.md         fonti, licenze e limiti di un'estensione futura
+```
+
+File modificati:
+
+```
+src/legal_consultant/config.py             + SUPPL_CORPUS_PATH, + radici_corpus()
+src/legal_consultant/ingest/parser.py      + _ALLEGATO_RE: `## Allegato I` apre un chunk
+scripts/bootstrap_index.py                 indicizza tutte le radici via radici_corpus()
+scripts/setup.py                           + passo 4/4: recupero a budget dagli anni recenti
+scripts/auto_update.py                     + fase supplementare e + fase di controllo completezza
+.gitignore, README.md, HANDOFF.md, CLAUDE.md, .claude/context/STACK.md, roadmap.md
+```
+
+Definition of done:
+
+- [x] audit con due accertamenti indipendenti: conteggi per tipologia dalla fonte, e 62 atti
+      notori verificati uno per uno sull'indice
+- [x] diagnosi della causa a monte, con le citazioni del codice che la sostengono
+- [x] recupero massivo dall'API Open Data ufficiale, a lotti per intervallo di emanazione
+- [x] recupero di un singolo atto per URN, che generalizza `fetch_codici.py`
+- [x] controllo di completezza che esce 1 nominando classe mancante e atto atteso non trovato
+- [x] lista bianca sugli atti scritti: un abrogato non deve entrare come vigente
+- [x] allegati come unità citabili proprie (Costituzione: 139 articoli + 18 allegati)
+- [x] integrazione in installer e attività pianificata, con budget di tempo
+- [x] 30 test verdi (12 preesistenti + 18 nuovi)
+- [x] verificato dal vivo che l'attività pianificata esegue le fasi nuove senza presidio e
+      registra nel log che il corpus ha lacune (notte del 2026-07-30)
+- [x] recall di non-regressione misurato prima e dopo: invariato (14/26, 19/26, 19/26)
+- [ ] popolamento storico completo: progressivo per costruzione, converge in alcuni giorni di
+      esecuzioni a budget; `scripts/check_completezza.py` dice quanto resta in ogni momento
+- [ ] benchmark esteso alle classi recuperate: le 26 domande attuali puntano tutte su codici,
+      quindi misurano la non-regressione e non il guadagno
+
+Domande aperte di questa feature:
+
+- Dimensione del lotto di export: tarata a 400 atti su misura diretta, perché un lotto da 1.200
+  non è arrivato a compimento in mezz'ora di attesa mentre uno da 400 si chiude in pochi minuti.
+  Non è chiaro se il limite sia sulla dimensione dell'archivio o sul carico della fonte in quel
+  momento: se in futuro i lotti da 400 rallentassero, il valore va rimisurato e non indovinato.
+- Segnalazione a monte: il testo che documenta la lacuna per il repository di terze parti è
+  pronto in `_notes/`, ma aprire una issue è un'azione verso l'esterno e spetta all'utente.
+- Il campo `consolidato_al` del frontmatter viene dalla data dell'Expression dell'export: resta
+  assente quando la fonte non la dichiara, invece di ripiegare sulla data di download, che non è
+  un consolidamento. Nessun consumatore lo legge ancora.
 
 Domande aperte:
 

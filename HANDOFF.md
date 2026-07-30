@@ -53,6 +53,16 @@ del Project, §5.4) e soggezione ai limiti d'uso del piano Team.
 ## 3. Fonte dati — `italia-corpus`
 [github.com/ahmeabd/italia-corpus](https://github.com/ahmeabd/italia-corpus)
 
+> ⚠️ **Aggiornamento del 2026-07-30, che corregge questa sezione.** La dichiarazione di
+> completezza riportata qui sotto è quella del dataset, e un audit sistematico l'ha
+> smentita: le 23 collezioni sono i pacchetti preconfezionati che Normattiva espone, e fra
+> essi non c'è la legge ordinaria. Mancavano 9.310 leggi non abrogate su 13.730, 1.584
+> decreti-legge vigenti su 1.636 e la Costituzione. I >280.000 atti sono file, non norme
+> distinte: gli atti distinti per URN sono 190.594. Le classi mancanti sono ora recuperate
+> dall'API Open Data di Normattiva. Misura e diagnosi in
+> `docs/audit-completezza-corpus.md`, correzione e architettura in
+> `docs/completamento-corpus.md`.
+
 - **Contenuto:** >280.000 atti legislativi italiani da Normattiva, 23 collezioni.
 - **Formato:** un file Markdown per atto, con **frontmatter YAML** (tipo, numero, data,
   titolo, URN, codice redazionale, stato di vigenza).
@@ -112,6 +122,7 @@ flowchart TD
     subgraph SRC["Fonti normative"]
         A1["italia-corpus<br/>clone locale gitignored, git pull manuale/schedulato"]
         A2["codici-extra<br/>tracciato, fetch_codici.py da Normattiva"]
+        A3["normattiva-suppl<br/>gitignored, fetch_normattiva.py<br/>API Open Data: leggi ordinarie,<br/>decreti-legge vigenti, Costituzione"]
     end
 
     subgraph IDX["Indicizzazione locale (no GPU)"]
@@ -138,6 +149,7 @@ flowchart TD
 
     A1 --> B1
     A2 --> B1
+    A3 --> B1
     B1 --> B2
     B3 -.aggiornamento incrementale.-> B2
     B2 --> C1 & C2 & C3

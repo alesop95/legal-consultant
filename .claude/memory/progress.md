@@ -6,6 +6,96 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-29/30 — Audit di completezza del corpus e completamento dalla fonte ufficiale
+
+Commit di riferimento: da assegnare (lavoro non ancora committato). Contesto: incarico esterno
+portato dall'utente in due file di desktop (`HANDOFF-legal-consultant-completezza.md` e
+`PROMPT-legal-consultant.md`), scritti dal progetto tesi che aveva scoperto dall'esterno, usando
+questo strumento per capitoli medico-legali, che il corpus non conteneva la L. 194/1978. La
+richiesta non era di aggiungere tre leggi ma di misurare quanto fosse grande il difetto,
+diagnosticarne la causa e renderlo non più silenzioso.
+
+Audit. Verificato con due accertamenti indipendenti. Dall'alto, interrogando l'API Open Data
+pubblica di Normattiva (scoperta durante l'audit, documentata con specifica OpenAPI, senza
+credenziali): il corpus copre il 92,9% degli atti dichiarati dalla fonte, ma il totale è dominato
+da 91.346 regi decreti e 47.760 DPR di interesse storico e nasconde la lacuna. Enumerando per
+intero le 13.730 leggi non abrogate e confrontandole una per una con l'indice: 9.313 assenti, il
+67,8%, di cui 2.755 modificate e vigenti. Sui decreti-legge non abrogati: 1.584 assenti su 1.636,
+il 96,8%, perché del decreto convertito il corpus ha solo la legge di conversione (il file della
+L. 77/2020 pesa 4 KB e contiene la formula più un link in uscita, senza nemmeno l'allegato delle
+modificazioni). La Costituzione era assente del tutto. Dal basso, su 62 atti notori: 29 leggi
+ordinarie su 30 assenti; la trentesima presente solo perché abrogata, nel testo originale del
+1996. Scoperto anche che i 287.805 atti dichiarati sono file: gli atti distinti per URN sono
+190.594, il 34% in meno. Corretta un'aspettativa dell'incarico: il codice di procedura penale c'è,
+perché in Normattiva è il DPR 447/1988 e non una tipologia autonoma.
+
+Diagnosi. Non un elenco cablato né un filtro che scarta: lo script a monte è un mirror fedele del
+catalogo delle 23 collezioni preconfezionate che Normattiva espone, e in quel catalogo la legge
+ordinaria non c'è. I 23 nomi dell'endpoint coincidono uno a uno con le 23 cartelle del corpus.
+Quindi "23 collezioni, sync completo" è letteralmente vero, mentre "tutta la legislazione
+pubblicata su Normattiva" non è sostenuto e non è documentato come limite. Prova del fallimento
+silenzioso: alla domanda sull'IVG il tool restituiva quattro risultati pertinenti al tema fra cui
+l'art. 99 del D.Lgs. 154/2013, la cui rubrica è letteralmente "Modifiche alla legge 22 maggio
+1978, n. 194"; il corpus conosceva l'atto che modifica la L. 194 e non la L. 194.
+
+Correzione (ADR-005). Scelta la terza strada, non prevista dall'incarico: l'API Open Data
+ufficiale, con export massivo asincrono in Akoma Ntoso, invece dello scraping per singolo atto che
+sulle 10.895 lacune avrebbe richiesto 22.000 richieste. La correzione a monte non è sul percorso
+critico (quel repository non ha mai processato una PR, è fermo da cinque settimane e ha il sync
+fermo da undici giorni con due issue di terzi senza risposta). File nuovi:
+`src/legal_consultant/fonte/{__init__,normattiva,akn,recupero}.py`,
+`scripts/{fetch_normattiva,fetch_atto,check_completezza}.py`, `tests/test_fonte.py` più la fixture
+`tests/fixtures-akn/legge-2026-101.akn.xml`. File modificati: `config.py` (SUPPL_CORPUS_PATH e
+`radici_corpus()`), `ingest/parser.py` (una regola: `## Allegato I` apre un chunk),
+`scripts/{bootstrap_index,setup,auto_update}.py`, `.gitignore`, `README.md`, `HANDOFF.md`,
+`CLAUDE.md`, `.claude/context/STACK.md`. Documenti nuovi: `docs/audit-completezza-corpus.md`,
+`docs/completamento-corpus.md`, `docs/giurisprudenza-fattibilita.md`.
+
+Tre difetti trovati e corretti mentre si costruiva, tutti su dati reali e non ipotizzati. Il
+numero dell'atto va preso dalla URN e non da `docNumber`, che porta rumore editoriale (un atto
+del 2026 dichiara "1 (Raccolta 2026)"). Normattiva dichiara `0000-00-00` in FRBRWork per gli atti
+non numerati, e una data impossibile faceva fallire il parsing YAML dell'intero atto: aggiunta una
+catena di ricadute che pesca la data reale dall'alias ELI, e la data si scrive quotata. L'euristica
+che ricostruisce la rubrica dal primo capoverso non numerato inghiottiva il testo degli articoli
+brevi: sulla Costituzione l'art. 139 finiva indicizzato con la sua unica frase promossa a rubrica e
+il corpo vuoto. Stretta a cinque condizioni e verificata su un anno intero di leggi (dei 295
+articoli con rubrica esplicita nessuno ha capoverso anonimo iniziale; dei 42 candidati validi tutti
+hanno altro contenuto dopo e nessuno termina con un punto, mentre nella Costituzione vale
+l'opposto). Trovato inoltre che le diciotto disposizioni transitorie della Costituzione vivono
+negli allegati, fuori dal corpo: ignorarle avrebbe ricreato a valle il difetto del corpus a monte,
+e accodarle all'ultimo articolo le avrebbe fatte citare come art. 139. Da qui la sola modifica al
+parser condiviso.
+
+Prestazioni. La prima versione chiedeva un export per anno ed era lenta per una ragione misurata e
+non intuibile: il costo di un export è dominato dall'attesa presso la fonte, non dal numero di
+atti, e il WAF davanti al gateway risponde 409 al polling ravvicinato (misurato: 409 per oltre due
+minuti di fila a cadenza di due secondi, su un export che era già pronto). Interrogare meno spesso
+è quindi più veloce. Riscritto in lotti contigui per intervallo di emanazione fino a 1.200 atti,
+ordinati dal più recente al più antico, con polling da 25 a 90 secondi: le lacune delle leggi
+passano da circa 300 export a 9 lotti.
+
+Validazione. 30 test verdi (12 preesistenti più 18 nuovi). `fetch_atto.py` sulla
+L. 194/1978: 22 articoli, esattamente il numero verificato indipendentemente dalla tesi, e la
+ricerca ora la restituisce. Costituzione: 139 articoli più 18 allegati, 157 unità citabili.
+Validazione non provocata e quindi la più significativa: l'attività pianificata di Windows già
+registrata su questa macchina ha eseguito da sola, la notte del 30 luglio alle 04:00 UTC, le fasi
+nuove nell'ordine previsto (`fetch_normattiva --da 2025`, poi il recupero storico a budget, poi il
+controllo di completezza) e ha scritto nel proprio registro che il corpus ha ancora lacune
+indicando il comando per il dettaglio. Recall di non-regressione invariato: recall@1 14/26,
+recall@5 19/26, recall@8 19/26 prima e dopo.
+
+Cosa non è stato fatto, e perché. Il popolamento completo è per costruzione progressivo (il
+recupero storico dal 1861 dura ore): la convergenza è affidata alle esecuzioni a budget
+dell'attività pianificata, e il numero esatto di ciò che resta lo dice
+`scripts/check_completezza.py`. Il benchmark di retrieval non copre le classi recuperate, perché le
+sue 26 domande puntano tutte su codici: misura la non-regressione, non il guadagno, ed estenderlo
+resta un lavoro aperto in roadmap. Nessuna issue è stata aperta a monte: è un'azione verso
+l'esterno che spetta all'utente, e il testo è pronto in `_notes/`. Nessuna implementazione sulla
+giurisprudenza: l'analisi (ADR-006) conclude che si potrebbe procedere solo sulla Corte
+costituzionale, e che sulla Cassazione non c'è un rischio da soppesare ma un divieto scritto che
+nomina la riproduzione su supporto elettronico e il trattamento mediante sistemi di intelligenza
+artificiale.
+
 ## 2026-07-06 — Valutazione di prontezza per il go-live su macchina vergine
 
 Commit di riferimento: `c59778d` (nessun file di codice toccato, solo analisi). Contesto:

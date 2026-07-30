@@ -76,11 +76,23 @@ def main() -> int:
         _run(["git", "-C", str(corpus), "config", "user.name", "legal-consultant-bot"])
         _run(["git", "-C", str(corpus), "config", "user.email", "legal-consultant@localhost"])
 
-    print("\n== 2/3 Ambiente ==")
+    print("\n== 2/4 Ambiente ==")
     _run(["uv", "sync"])
 
-    print("\n== 3/3 Indice ==")
+    print("\n== 3/4 Indice ==")
     _run(["uv", "run", "python", "scripts/bootstrap_index.py"])
+
+    # Le classi di atti che il corpus di terze parti non contiene (leggi ordinarie,
+    # decreti-legge vigenti, Costituzione: vedi docs/audit-completezza-corpus.md) si
+    # recuperano dalla fonte ufficiale. Il recupero storico completo dura ore, quindi qui
+    # se ne fa una parte a budget e il resto lo completa l'attivita' pianificata nei giorni
+    # successivi: l'alternativa sarebbe un installer che sembra bloccato per mezza giornata.
+    # Il recupero parte dagli anni recenti, che sono quelli che si consultano di piu'.
+    print("\n== 4/4 Classi di atti mancanti dal corpus di terze parti ==")
+    print("Recupero da Normattiva, a partire dagli anni recenti (circa 20 minuti).")
+    print("Il resto viene completato dall'aggiornamento automatico nei giorni successivi.")
+    _run(["uv", "run", "python", "scripts/fetch_normattiva.py",
+          "--da", "1980", "--minuti", "20"])
 
     print(
         "\nSetup completato. Il server MCP 'legge-it' e' pronto.\n"
