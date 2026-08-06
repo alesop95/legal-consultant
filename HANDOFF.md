@@ -1,80 +1,50 @@
 # Consulente Legale — Handoff iniziale per l'implementazione
 
-> Documento di consegna per avviare lo sviluppo. **Versione 2.0** — 2026-06-25.
-> Obiettivo: un assistente legale personale e aziendale, **sempre aggiornato** sulla
-> normativa italiana, realizzato come **MCP server locale** interrogato da **Claude
-> Desktop** (piano Team — nessun costo API), con retrieval **interamente locale**.
+> Documento di consegna per avviare lo sviluppo. **Versione 2.0** — 2026-06-25. Obiettivo: un assistente legale personale e aziendale, **sempre aggiornato** sulla normativa italiana, realizzato come **MCP server locale** interrogato da **Claude Desktop** (piano Team — nessun costo API), con retrieval **interamente locale**.
 
 ---
 
 ## 1. Obiettivo e scope
 
-Strumento che risponde a domande legali (uso privato e aziendale) basandosi sul corpus
-della legislazione italiana, citando gli atti normativi di riferimento.
+Strumento che risponde a domande legali (uso privato e aziendale) basandosi sul corpus della legislazione italiana, citando gli atti normativi di riferimento.
 
 **Decisioni di progetto (confermate):**
-- **Forma del prodotto:** un **MCP server locale in Python** che espone strumenti di
-  ricerca normativa. Il ragionamento e la chat li fa **Claude Desktop**, che l'utente già
-  usa con server MCP (`obsidian-vaults`). → **usa l'abbonamento Team, zero token API.**
+- **Forma del prodotto:** un **MCP server locale in Python** che espone strumenti di ricerca normativa. Il ragionamento e la chat li fa **Claude Desktop**, che l'utente già usa con server MCP (`obsidian-vaults`). → **usa l'abbonamento Team, zero token API.**
 - **Deployment:** locale, su desktop Windows.
-- **Privacy:** massima. Corpus e ricerca sono on-disk; Claude Desktop riceve solo la query
-  e gli estratti normativi restituiti dai tool.
-- **Retrieval:** **BM25 / full-text**, senza GPU e senza embedding (vedi §5). Indicizzazione
-  quasi istantanea; forte sui match lessicali tipici del diritto (articoli, leggi, termini).
+- **Privacy:** massima. Corpus e ricerca sono on-disk; Claude Desktop riceve solo la query e gli estratti normativi restituiti dai tool.
+- **Retrieval:** **BM25 / full-text**, senza GPU e senza embedding (vedi §5). Indicizzazione quasi istantanea; forte sui match lessicali tipici del diritto (articoli, leggi, termini).
 - **Ambito:** **solo diritto italiano**. Aggiornamento via `git pull` giornaliero del corpus.
 - **Stack:** Python.
 
-**Fuori scope (per ora):** diritto UE (EUR-Lex), embedding semantici, UI custom,
-multi-utente, redazione di atti. Backlog in §7 Fase 4+.
+**Fuori scope (per ora):** diritto UE (EUR-Lex), embedding semantici, UI custom, multi-utente, redazione di atti. Backlog in §7 Fase 4+.
 
-> ⚠️ **Disclaimer obbligatorio:** lo strumento fornisce supporto informativo, **non
-> costituisce consulenza legale** e non sostituisce un professionista abilitato. Per uso
-> professionale fare sempre riferimento alla *Gazzetta Ufficiale*. Va inserito nelle
-> istruzioni del Project di Claude Desktop (§5.4) e nell'output dei tool.
+> ⚠️ **Disclaimer obbligatorio:** lo strumento fornisce supporto informativo, **non costituisce consulenza legale** e non sostituisce un professionista abilitato. Per uso professionale fare sempre riferimento alla *Gazzetta Ufficiale*. Va inserito nelle istruzioni del Project di Claude Desktop (§5.4) e nell'output dei tool.
 
 ---
 
 ## 2. Perché MCP server invece di app + API
 
-L'abbonamento **Claude Team (claude.ai)** e l'**API Anthropic** sono prodotti separati e
-fatturati separatamente: il Team plan alimenta la chat/Claude Desktop ma **non** include
-crediti API. Un'app custom che chiama l'API consumerebbe token pay-as-you-go.
+L'abbonamento **Claude Team (claude.ai)** e l'**API Anthropic** sono prodotti separati e fatturati separatamente: il Team plan alimenta la chat/Claude Desktop ma **non** include crediti API. Un'app custom che chiama l'API consumerebbe token pay-as-you-go.
 
-Esponendo invece la ricerca normativa come **MCP server locale**, è **Claude Desktop** (già
-incluso nel Team plan) a fare il ragionamento, chiamando i nostri tool per ottenere gli
-estratti. Vantaggi: nessun costo API, riuso del setup MCP esistente, UI già pronta, stesso
-confine di privacy (tutto locale tranne la chat, che passa per l'abbonamento).
+Esponendo invece la ricerca normativa come **MCP server locale**, è **Claude Desktop** (già incluso nel Team plan) a fare il ragionamento, chiamando i nostri tool per ottenere gli estratti. Vantaggi: nessun costo API, riuso del setup MCP esistente, UI già pronta, stesso confine di privacy (tutto locale tranne la chat, che passa per l'abbonamento).
 
-Limiti da tenere presenti: meno controllo sul prompt di sistema (compensato dalle istruzioni
-del Project, §5.4) e soggezione ai limiti d'uso del piano Team.
+Limiti da tenere presenti: meno controllo sul prompt di sistema (compensato dalle istruzioni del Project, §5.4) e soggezione ai limiti d'uso del piano Team.
 
 ---
 
 ## 3. Fonte dati — `italia-corpus`
 [github.com/ahmeabd/italia-corpus](https://github.com/ahmeabd/italia-corpus)
 
-> ⚠️ **Aggiornamento del 2026-07-30, che corregge questa sezione.** La dichiarazione di
-> completezza riportata qui sotto è quella del dataset, e un audit sistematico l'ha
-> smentita: le 23 collezioni sono i pacchetti preconfezionati che Normattiva espone, e fra
-> essi non c'è la legge ordinaria. Mancavano 9.310 leggi non abrogate su 13.730, 1.584
-> decreti-legge vigenti su 1.636 e la Costituzione. I >280.000 atti sono file, non norme
-> distinte: gli atti distinti per URN sono 190.594. Le classi mancanti sono ora recuperate
-> dall'API Open Data di Normattiva. Misura e diagnosi in
-> `docs/audit-completezza-corpus.md`, correzione e architettura in
-> `docs/completamento-corpus.md`.
+> ⚠️ **Aggiornamento del 2026-07-30, che corregge questa sezione.** La dichiarazione di completezza riportata qui sotto è quella del dataset, e un audit sistematico l'ha smentita: le 23 collezioni sono i pacchetti preconfezionati che Normattiva espone, e fra essi non c'è la legge ordinaria. Mancavano 9.310 leggi non abrogate su 13.730, 1.584 decreti-legge vigenti su 1.636 e la Costituzione. I >280.000 atti sono file, non norme distinte: gli atti distinti per URN sono 190.594. Le classi mancanti sono ora recuperate dall'API Open Data di Normattiva. Misura e diagnosi in `docs/audit-completezza-corpus.md`, correzione e architettura in `docs/completamento-corpus.md`.
 
 - **Contenuto:** >280.000 atti legislativi italiani da Normattiva, 23 collezioni.
-- **Formato:** un file Markdown per atto, con **frontmatter YAML** (tipo, numero, data,
-  titolo, URN, codice redazionale, stato di vigenza).
+- **Formato:** un file Markdown per atto, con **frontmatter YAML** (tipo, numero, data, titolo, URN, codice redazionale, stato di vigenza).
 - **Dimensione:** alcuni GB.
-- **Aggiornamento:** **automatico giornaliero**; ogni modifica normativa = un commit git
-  → reindicizzazione **incrementale via `git diff`**.
+- **Aggiornamento:** **automatico giornaliero**; ogni modifica normativa = un commit git → reindicizzazione **incrementale via `git diff`**.
 - **Licenza:** contenuto di pubblico dominio (art. 5 L. diritto d'autore); script MIT.
-- **Integrazione:** **git submodule**; `git pull` schedulato. È autonomo e self-updating,
-  non serve costruire scraper.
+- **Integrazione:** **git submodule**; `git pull` schedulato. È autonomo e self-updating, non serve costruire scraper.
 
-> ⚠️ Lo schema esatto del frontmatter YAML va **verificato sul campo** all'inizio della
-> Fase 1 prima di scrivere il parser (qui descritto dalla documentazione del repo).
+> ⚠️ Lo schema esatto del frontmatter YAML va **verificato sul campo** all'inizio della Fase 1 prima di scrivere il parser (qui descritto dalla documentazione del repo).
 
 ---
 
@@ -105,17 +75,11 @@ del Project, §5.4) e soggezione ai limiti d'uso del piano Team.
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
-**Confine di privacy:** corpus, indice e ricerca sono interamente locali. Solo la
-conversazione (domanda + estratti restituiti dai tool) passa per Claude Desktop.
+**Confine di privacy:** corpus, indice e ricerca sono interamente locali. Solo la conversazione (domanda + estratti restituiti dai tool) passa per Claude Desktop.
 
 ### 4.1 Flusso end-to-end as-built (2026-07-03)
 
-Il diagramma di §4 descrive l'impostazione decisa prima dell'implementazione e resta come
-riferimento di progetto. Il flusso realmente costruito, verificato end-to-end fino alla Fase
-B, se ne discosta su alcuni punti: il corpus è un clone locale ignorato da git invece di un
-submodule, l'indicizzazione applica un ranking pesato oltre al BM25 nudo, ed esiste un layer
-di istruzioni nel Project di Claude Desktop non presente nel disegno iniziale. Il diagramma
-seguente descrive lo stato reale.
+Il diagramma di §4 descrive l'impostazione decisa prima dell'implementazione e resta come riferimento di progetto. Il flusso realmente costruito, verificato end-to-end fino alla Fase B, se ne discosta su alcuni punti: il corpus è un clone locale ignorato da git invece di un submodule, l'indicizzazione applica un ranking pesato oltre al BM25 nudo, ed esiste un layer di istruzioni nel Project di Claude Desktop non presente nel disegno iniziale. Il diagramma seguente descrive lo stato reale.
 
 ```mermaid
 flowchart TD
@@ -161,40 +125,23 @@ flowchart TD
     D2 --> E2
 ```
 
-Due percorsi restano fuori dal diagramma perché operativi, non conversazionali: il setup
-iniziale (`install.cmd`/`install.ps1` → `scripts/setup.py` → registrazione in
-`claude_desktop_config.json`, nodo D1) e l'aggiornamento di corpus e codici (nodo B3), entrambi
-pensati per girare senza intervento tecnico da parte dello studio legale che usa il prodotto.
-L'aggiornamento non è più solo uno script da lanciare a mano: `install.ps1` registra
-un'attività pianificata di Windows (`ConsulenteLegale-Aggiornamento`, nessun privilegio di
-amministratore richiesto) che ogni giorno esegue `scripts/auto_update.py`, il quale orchestra
-`update.pull()` sul corpus principale e, al più una volta alla settimana, `fetch_codici.py` sui
-codici fondamentali, reindicizzando in automatico solo ciò che cambia.
+Due percorsi restano fuori dal diagramma perché operativi, non conversazionali: il setup iniziale (`install.cmd`/`install.ps1` → `scripts/setup.py` → registrazione in `claude_desktop_config.json`, nodo D1) e l'aggiornamento di corpus e codici (nodo B3), entrambi pensati per girare senza intervento tecnico da parte dello studio legale che usa il prodotto. L'aggiornamento non è più solo uno script da lanciare a mano: `install.ps1` registra un'attività pianificata di Windows (`ConsulenteLegale-Aggiornamento`, nessun privilegio di amministratore richiesto) che ogni giorno esegue `scripts/auto_update.py`, il quale orchestra `update.pull()` sul corpus principale e, al più una volta alla settimana, `fetch_codici.py` sui codici fondamentali, reindicizzando in automatico solo ciò che cambia.
 
 ---
 
 ## 5. Decisioni tecniche chiave
 
 ### 5.1 Retrieval: BM25 / full-text (no GPU)
-- **Indice:** **SQLite FTS5** (incluso in Python, zero dipendenze esterne, BM25 nativo) —
-  oppure `bm25s`/Tantivy se servirà più performance. SQLite FTS5 è la scelta di partenza:
-  semplice, on-disk, ranking BM25 integrato.
-- Tokenizzazione: `unicode61` con `remove_diacritics`; valutare una lista di stopword
-  italiane e la gestione di abbreviazioni giuridiche (art., c.c., d.lgs., ecc.).
-- **Niente embedding/GPU per l'MVP.** Il match lessicale è forte nel legale (numeri di
-  articolo, nomi di leggi, termini tecnici). Embedding semantico leggero CPU
-  (`multilingual-e5-small`, ONNX quantizzato) → solo in Fase 4 se il recall lessicale
-  risulta insufficiente, per una ricerca ibrida.
+- **Indice:** **SQLite FTS5** (incluso in Python, zero dipendenze esterne, BM25 nativo) — oppure `bm25s`/Tantivy se servirà più performance. SQLite FTS5 è la scelta di partenza: semplice, on-disk, ranking BM25 integrato.
+- Tokenizzazione: `unicode61` con `remove_diacritics`; valutare una lista di stopword italiane e la gestione di abbreviazioni giuridiche (art., c.c., d.lgs., ecc.).
+- **Niente embedding/GPU per l'MVP.** Il match lessicale è forte nel legale (numeri di articolo, nomi di leggi, termini tecnici). Embedding semantico leggero CPU (`multilingual-e5-small`, ONNX quantizzato) → solo in Fase 4 se il recall lessicale risulta insufficiente, per una ricerca ibrida.
 
 ### 5.2 Chunking
-- **Granularità per articolo** (o comma per articoli lunghi): il chunk mappa 1:1 a un
-  riferimento citabile.
-- Metadati per chunk (colonne dell'indice): `urn`, `tipo_atto`, `numero`, `data`,
-  `titolo_atto`, `articolo`, `vigente`, `path_file`. Servono per filtri e citazioni.
+- **Granularità per articolo** (o comma per articoli lunghi): il chunk mappa 1:1 a un riferimento citabile.
+- Metadati per chunk (colonne dell'indice): `urn`, `tipo_atto`, `numero`, `data`, `titolo_atto`, `articolo`, `vigente`, `path_file`. Servono per filtri e citazioni.
 
 ### 5.3 MCP server — strumenti esposti
-Implementare con l'SDK ufficiale **`mcp`** (FastMCP), transport **stdio** (per Claude
-Desktop). Tool proposti:
+Implementare con l'SDK ufficiale **`mcp`** (FastMCP), transport **stdio** (per Claude Desktop). Tool proposti:
 
 | Tool | Input | Output |
 |---|---|---|
@@ -202,13 +149,10 @@ Desktop). Tool proposti:
 | `leggi_atto` | `urn` (o `path`), `articolo?` | testo completo dell'atto o dell'articolo + metadati |
 | `info_corpus` | — | data ultimo aggiornamento, n. atti indicizzati, ultimo commit |
 
-Le **descrizioni dei tool** devono guidare Claude a citare sempre articolo + atto e a
-usare `cerca_normativa` prima di rispondere su questioni normative.
+Le **descrizioni dei tool** devono guidare Claude a citare sempre articolo + atto e a usare `cerca_normativa` prima di rispondere su questioni normative.
 
 ### 5.4 Configurazione e istruzioni in Claude Desktop
-- Registrare il server in `claude_desktop_config.json` (l'utente ha già questo file:
-  `C:\Users\Utente\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json`).
-  Esempio voce:
+- Registrare il server in `claude_desktop_config.json` (l'utente ha già questo file: `C:\Users\Utente\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json`). Esempio voce:
   ```json
   "legge-it": {
     "command": "uv",
@@ -216,19 +160,11 @@ usare `cerca_normativa` prima di rispondere su questioni normative.
              "legal_consultant.mcp_server"]
   }
   ```
-- Creare un **Project "Consulente Legale"** in Claude Desktop con istruzioni custom (questo
-  sostituisce il system prompt): "usa sempre i tool `legge-it`, rispondi solo sulla base
-  degli estratti restituiti, cita sempre articolo e atto con il loro URN, dichiara quando
-  l'informazione non è nel corpus, includi il disclaimer".
-- **Aggiornamento 'live':** il corpus arriva fino all'ultimo `git pull`. Per le ultimissime
-  novità (Gazzetta Ufficiale del giorno, sentenze) si può usare il **web search di Claude
-  Desktop**, da attivare consapevolmente vista la natura della query.
+- Creare un **Project "Consulente Legale"** in Claude Desktop con istruzioni custom (questo sostituisce il system prompt): "usa sempre i tool `legge-it`, rispondi solo sulla base degli estratti restituiti, cita sempre articolo e atto con il loro URN, dichiara quando l'informazione non è nel corpus, includi il disclaimer".
+- **Aggiornamento 'live':** il corpus arriva fino all'ultimo `git pull`. Per le ultimissime novità (Gazzetta Ufficiale del giorno, sentenze) si può usare il **web search di Claude Desktop**, da attivare consapevolmente vista la natura della query.
 
 ### 5.5 Aggiornamento incrementale
-- Ogni modifica normativa è un commit ⇒ dopo `git pull`, usare `git diff --name-status` tra
-  il commit precedente e quello nuovo per reindicizzare **solo i file cambiati**
-  (aggiunti/modificati → upsert; eliminati → delete). Salvare il commit hash dell'ultima
-  indicizzazione. La ricostruzione FTS5 è comunque economica anche da zero.
+- Ogni modifica normativa è un commit ⇒ dopo `git pull`, usare `git diff --name-status` tra il commit precedente e quello nuovo per reindicizzare **solo i file cambiati** (aggiunti/modificati → upsert; eliminati → delete). Salvare il commit hash dell'ultima indicizzazione. La ricostruzione FTS5 è comunque economica anche da zero.
 
 ---
 
@@ -283,9 +219,7 @@ legal-consultant/
 - Tool `info_corpus` per mostrare data/commit dell'ultimo aggiornamento.
 
 **Fase 4+ — Estensioni (a seguire)**
-- Ricerca ibrida con embedding leggero CPU (`multilingual-e5-small` ONNX) se serve recall
-  semantico; reranking. Diritto UE (EUR-Lex). Anonimizzazione opzionale. Valutazione di
-  un'app/API custom in alternativa, riusando ingest+index come libreria.
+- Ricerca ibrida con embedding leggero CPU (`multilingual-e5-small` ONNX) se serve recall semantico; reranking. Diritto UE (EUR-Lex). Anonimizzazione opzionale. Valutazione di un'app/API custom in alternativa, riusando ingest+index come libreria.
 
 ---
 
@@ -304,6 +238,4 @@ legal-consultant/
 
 ## 9. Prossimi passi
 
-Confermata questa impostazione, si parte con **Fase 0 + Fase 1**: setup repo, submodule del
-corpus, parser MD+YAML e prima indicizzazione FTS5. Primo punto operativo: clonare il corpus
-e ispezionare lo schema reale del frontmatter di alcuni atti rappresentativi.
+Confermata questa impostazione, si parte con **Fase 0 + Fase 1**: setup repo, submodule del corpus, parser MD+YAML e prima indicizzazione FTS5. Primo punto operativo: clonare il corpus e ispezionare lo schema reale del frontmatter di alcuni atti rappresentativi.

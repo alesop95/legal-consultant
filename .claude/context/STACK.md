@@ -11,125 +11,25 @@ last-verified-commit: bae3b34
 
 # Stack applicativo
 
-> Documento di recupero più importante: tracciato, perché un collega che clona deve vederlo.
-> Aggiornato leggendo il codice reale della Fase 1 (ingest + indice) e della Fase 2 (server MCP).
-> Le scelte di fondo sono in `decisions.md` (ADR-002/003/004).
+> Documento di recupero più importante: tracciato, perché un collega che clona deve vederlo. Aggiornato leggendo il codice reale della Fase 1 (ingest + indice) e della Fase 2 (server MCP). Le scelte di fondo sono in `decisions.md` (ADR-002/003/004).
 
 ## Stack e runtime
 
-Python >= 3.11 (l'ambiente uv ha materializzato CPython 3.12.13). Gestore pacchetti e ambiente:
-`uv` (lockfile `uv.lock`). Build backend: `hatchling`, layout `src/` con package
-`legal_consultant`. Dipendenze runtime: `python-frontmatter` (parsing frontmatter YAML, trascina
-`PyYAML`) e `mcp` (SDK ufficiale Model Context Protocol, da cui FastMCP per il server e il
-transport stdio). Indice di ricerca: **SQLite FTS5** via `sqlite3` di stdlib (nessuna dipendenza
-esterna), tokenizer `unicode61 remove_diacritics 2`, ranking **BM25** nativo. Test: `pytest`.
+Python >= 3.11 (l'ambiente uv ha materializzato CPython 3.12.13). Gestore pacchetti e ambiente: `uv` (lockfile `uv.lock`). Build backend: `hatchling`, layout `src/` con package `legal_consultant`. Dipendenze runtime: `python-frontmatter` (parsing frontmatter YAML, trascina `PyYAML`) e `mcp` (SDK ufficiale Model Context Protocol, da cui FastMCP per il server e il transport stdio). Indice di ricerca: **SQLite FTS5** via `sqlite3` di stdlib (nessuna dipendenza esterna), tokenizer `unicode61 remove_diacritics 2`, ranking **BM25** nativo. Test: `pytest`.
 
 ## Alternative deliberatamente escluse
 
-Embedding semantici e vector DB (BGE-M3, LanceDB/Qdrant) esclusi per l'MVP: nessuna GPU
-disponibile e prima indicizzazione troppo onerosa su CPU (ADR-003). La ricerca ibrida
-dense+sparse resta in backlog, da introdurre solo se il recall del solo BM25 risulta
-insufficiente. Diritto UE (EUR-Lex) fuori ambito (ADR-004).
+Embedding semantici e vector DB (BGE-M3, LanceDB/Qdrant) esclusi per l'MVP: nessuna GPU disponibile e prima indicizzazione troppo onerosa su CPU (ADR-003). La ricerca ibrida dense+sparse resta in backlog, da introdurre solo se il recall del solo BM25 risulta insufficiente. Diritto UE (EUR-Lex) fuori ambito (ADR-004).
 
 ## Flussi di codice e ruolo architetturale dei file
 
-`config.py` risolve i percorsi locali (CORPUS_PATH, EXTRA_CORPUS_PATH, INDEX_PATH, STATE_PATH) da
-ambiente/.env con default relativi alla radice, ed espone `long_path`, che su Windows antepone il prefisso
-extended-length `\\?\` ai path assoluti: il corpus italiano ha nomi di file che superano il limite
-di 260 caratteri (MAX_PATH) e senza questo accorgimento non sarebbero leggibili: l'helper aggira il
-limite senza modifiche al registro né privilegi di amministratore. `ingest/parser.py` lo usa per
-aprire ogni atto. `ingest/parser.py` legge un atto `.md`: separa il frontmatter YAML
-(metadati dell'atto) e spezza il corpo in chunk a granularità di articolo, riconoscendo le
-intestazioni `## Art. N.` con rubrica opzionale; produce `ParsedAct(act, chunks)`. `index/fts.py`
-costruisce e interroga la tabella virtuale FTS5 `chunks` (colonne testuali indicizzate, metadati
-UNINDEXED per citazione e filtri), con `insert_act`, `delete_path` (upsert per file), `search`
-(BM25 + filtro `solo_vigenti`), `get_act` (chunk di un atto per `urn` o `path`, in ordine, con
-filtro per singolo articolo) e `corpus_stats` (conteggio atti distinti e chunk).
-`scripts/bootstrap_index.py` percorre il corpus, parsa ogni atto e popola l'indice da zero.
-`mcp_server.py` è il server MCP "legge-it": costruisce un `FastMCP` e registra i tre tool
-`cerca_normativa` (sopra `fts.search`), `leggi_atto` (sopra `fts.get_act`) e `info_corpus` (sopra
-`fts.corpus_stats` più la freschezza del corpus), e il prompt `consulenza_legale` con le istruzioni
-e il disclaimer; gira su transport stdio. La logica dati resta in `index.fts`; il server è uno
-strato sottile di wiring più helper puri di formattazione (`_hit_to_dict`, `_citazione`), così i
-tool sono verificabili sull'indice di fixture senza il transport. Ogni tool degrada con grazia
-quando l'indice non esiste, rimandando al bootstrap. La ricerca è robusta a input libero: `search`
-passa la query per `fts.to_match_query`, che estrae i soli token e li cita come termini letterali
-in OR, così un testo non tecnico non può produrre una query MATCH invalida.
+`config.py` risolve i percorsi locali (CORPUS_PATH, EXTRA_CORPUS_PATH, INDEX_PATH, STATE_PATH) da ambiente/.env con default relativi alla radice, ed espone `long_path`, che su Windows antepone il prefisso extended-length `\\?\` ai path assoluti: il corpus italiano ha nomi di file che superano il limite di 260 caratteri (MAX_PATH) e senza questo accorgimento non sarebbero leggibili: l'helper aggira il limite senza modifiche al registro né privilegi di amministratore. `ingest/parser.py` lo usa per aprire ogni atto. `ingest/parser.py` legge un atto `.md`: separa il frontmatter YAML (metadati dell'atto) e spezza il corpo in chunk a granularità di articolo, riconoscendo le intestazioni `## Art. N.` con rubrica opzionale; produce `ParsedAct(act, chunks)`. `index/fts.py` costruisce e interroga la tabella virtuale FTS5 `chunks` (colonne testuali indicizzate, metadati UNINDEXED per citazione e filtri), con `insert_act`, `delete_path` (upsert per file), `search` (BM25 + filtro `solo_vigenti`), `get_act` (chunk di un atto per `urn` o `path`, in ordine, con filtro per singolo articolo) e `corpus_stats` (conteggio atti distinti e chunk). `scripts/bootstrap_index.py` percorre il corpus, parsa ogni atto e popola l'indice da zero. `mcp_server.py` è il server MCP "legge-it": costruisce un `FastMCP` e registra i tre tool `cerca_normativa` (sopra `fts.search`), `leggi_atto` (sopra `fts.get_act`) e `info_corpus` (sopra `fts.corpus_stats` più la freschezza del corpus), e il prompt `consulenza_legale` con le istruzioni e il disclaimer; gira su transport stdio. La logica dati resta in `index.fts`; il server è uno strato sottile di wiring più helper puri di formattazione (`_hit_to_dict`, `_citazione`), così i tool sono verificabili sull'indice di fixture senza il transport. Ogni tool degrada con grazia quando l'indice non esiste, rimandando al bootstrap. La ricerca è robusta a input libero: `search` passa la query per `fts.to_match_query`, che estrae i soli token e li cita come termini letterali in OR, così un testo non tecnico non può produrre una query MATCH invalida.
 
-Il ranking va oltre il BM25 pesato per colonna (`_BM25`: rubrica x12, titolo x3, corpo x1).
-`to_match_query` esclude anche le stopword italiane (preposizioni semplici e articolate, articoli,
-congiunzioni) dall'OR di ricerca: incluse, abbinerebbero quasi ogni riga del corpus (es. "di" da
-solo supera le centinaia di migliaia di righe) diluendo il campione su cui si calcola il
-punteggio. `search` poi ricalcola in Python il punteggio di un campione sovra-campionato (50x il
-`limit` richiesto con un minimo fisso di 400, necessario perché la normalizzazione per lunghezza
-di BM25 può relegare un articolo pertinente ma lungo ben oltre le prime posizioni grezze, e perché
-un `limit` piccolo (Claude Desktop chiama con `limit=1` per isolare il primo risultato) non deve
-restringere la finestra di ricalcolo, altrimenti il bonus non ha candidati su cui agire) sommandovi
-due correttivi: `_rubrica_bonus`, che premia le rubriche quasi interamente coperte dalle parole di
-contenuto della domanda (il *nomen iuris* cercato, es. "Furto" quando si cerca "furto", a
-prescindere da parole generiche aggiuntive nella domanda), e `_CODICE_GENERALE_BONUS`, uno
-spareggio fisso sugli URN dei tre codici generali (civile, penale, procedura civile) che favorisce
-la lettura più probabile quando due codici condividono la stessa rubrica (es. "diffamazione" tra
-art. 595 c.p. e l'omonimo art. 227 dei codici penali militari). La colonna `score` esposta ai tool
-resta il BM25 grezzo di FTS5, metrica trasparente; l'ordinamento restituito riflette invece il
-punteggio corretto. Misurato su `scripts/benchmark_retrieval.py`: recall@1 10→14/26, recall@5
-15→19/26, recall@8 invariato a 19/26; confermato dal vivo in Claude Desktop su 6 query con
-`limit=1` (5/6 corrette), lo stesso test che aveva inizialmente rivelato il bug del
-sovra-campionamento legato a `limit` prima di questo fix.
+Il ranking va oltre il BM25 pesato per colonna (`_BM25`: rubrica x12, titolo x3, corpo x1). `to_match_query` esclude anche le stopword italiane (preposizioni semplici e articolate, articoli, congiunzioni) dall'OR di ricerca: incluse, abbinerebbero quasi ogni riga del corpus (es. "di" da solo supera le centinaia di migliaia di righe) diluendo il campione su cui si calcola il punteggio. `search` poi ricalcola in Python il punteggio di un campione sovra-campionato (50x il `limit` richiesto con un minimo fisso di 400, necessario perché la normalizzazione per lunghezza di BM25 può relegare un articolo pertinente ma lungo ben oltre le prime posizioni grezze, e perché un `limit` piccolo (Claude Desktop chiama con `limit=1` per isolare il primo risultato) non deve restringere la finestra di ricalcolo, altrimenti il bonus non ha candidati su cui agire) sommandovi due correttivi: `_rubrica_bonus`, che premia le rubriche quasi interamente coperte dalle parole di contenuto della domanda (il *nomen iuris* cercato, es. "Furto" quando si cerca "furto", a prescindere da parole generiche aggiuntive nella domanda), e `_CODICE_GENERALE_BONUS`, uno spareggio fisso sugli URN dei tre codici generali (civile, penale, procedura civile) che favorisce la lettura più probabile quando due codici condividono la stessa rubrica (es. "diffamazione" tra art. 595 c.p. e l'omonimo art. 227 dei codici penali militari). La colonna `score` esposta ai tool resta il BM25 grezzo di FTS5, metrica trasparente; l'ordinamento restituito riflette invece il punteggio corretto. Misurato su `scripts/benchmark_retrieval.py`: recall@1 10→14/26, recall@5 15→19/26, recall@8 invariato a 19/26; confermato dal vivo in Claude Desktop su 6 query con `limit=1` (5/6 corrette), lo stesso test che aveva inizialmente rivelato il bug del sovra-campionamento legato a `limit` prima di questo fix.
 
-Il package `update` gestisce l'aggiornamento incrementale (Fase 3): `corpus_revision` legge commit
-e data dell'HEAD del corpus, `pull` allinea il clone locale del corpus all'ultimo commit del
-remoto con `fetch --depth 1` + `reset --hard @{u}` (non più `pull --ff-only`: il corpus contiene
-path che differiscono solo per maiuscole/minuscole, che su un filesystem case-insensitive come
-quello di Windows collidono fisicamente sullo stesso file e lasciano sempre alcune voci
-"modificate" anche subito dopo un checkout pulito, facendo fallire un fast-forward puro),
-`changed_files` calcola via `git diff` i `.md` aggiunti/modificati/cancellati fra due revisioni,
-`reindex_paths` ritocca nell'indice i soli atti cambiati (upsert per path), e
-`read_state`/`write_state` persistono lo stato in `data/index/state.json` (commit, data, conteggi,
-timestamp del reindex). `scripts/setup.py` è il setup a un comando per l'utente finale: clona il
-corpus come clone locale ignorato da git (non un submodule) in shallow, verifica con
-`git rev-parse HEAD` che un clone preesistente sia davvero completo (rimuovendo e rifacendo quelli
-interrotti a metà), configura un'identità git placeholder scoped al solo clone, poi fa `uv sync` e
-il bootstrap dell'indice. `scripts/update_corpus.py` è l'aggiornamento manuale una tantum;
-`scripts/auto_update.py` è la stessa logica orchestrata senza presidio (corpus ad ogni giro,
-`fetch_codici.py` al più settimanale) e registrata da `install.ps1` come attività pianificata di
-Windows. `scripts/fetch_codici.py` scarica da Normattiva (via `normattiva2md`) i codici
-fondamentali il cui articolato manca in italia-corpus (civile, penale, procedura civile,
-navigazione, penali militari) e li salva in `EXTRA_CORPUS_PATH` (`data/codici-extra`, tracciato),
-che il bootstrap indicizza insieme al clone del corpus. Il parser
-riconosce gli articoli a 2-4 cancelletti con rubrica sia dopo il trattino (italia-corpus) sia tra
-parentesi (Normattiva), e riconosce come confine di chunk anche una intestazione `## Allegato I`,
-perché gli allegati portano contenuto normativo a sé (le diciotto disposizioni transitorie della
-Costituzione stanno lì) che altrimenti finirebbe in coda all'ultimo articolo e ne prenderebbe il
-numero in citazione; il numero è obbligatorio, così `## Allegati` dei codici resta testo. La
-registrazione in Claude Code è
-versionata in `.mcp.json` in radice; per Claude Desktop si usa la voce in `deployment.md`.
+Il package `update` gestisce l'aggiornamento incrementale (Fase 3): `corpus_revision` legge commit e data dell'HEAD del corpus, `pull` allinea il clone locale del corpus all'ultimo commit del remoto con `fetch --depth 1` + `reset --hard @{u}` (non più `pull --ff-only`: il corpus contiene path che differiscono solo per maiuscole/minuscole, che su un filesystem case-insensitive come quello di Windows collidono fisicamente sullo stesso file e lasciano sempre alcune voci "modificate" anche subito dopo un checkout pulito, facendo fallire un fast-forward puro), `changed_files` calcola via `git diff` i `.md` aggiunti/modificati/cancellati fra due revisioni, `reindex_paths` ritocca nell'indice i soli atti cambiati (upsert per path), e `read_state`/`write_state` persistono lo stato in `data/index/state.json` (commit, data, conteggi, timestamp del reindex). `scripts/setup.py` è il setup a un comando per l'utente finale: clona il corpus come clone locale ignorato da git (non un submodule) in shallow, verifica con `git rev-parse HEAD` che un clone preesistente sia davvero completo (rimuovendo e rifacendo quelli interrotti a metà), configura un'identità git placeholder scoped al solo clone, poi fa `uv sync` e il bootstrap dell'indice. `scripts/update_corpus.py` è l'aggiornamento manuale una tantum; `scripts/auto_update.py` è la stessa logica orchestrata senza presidio (corpus ad ogni giro, `fetch_codici.py` al più settimanale) e registrata da `install.ps1` come attività pianificata di Windows. `scripts/fetch_codici.py` scarica da Normattiva (via `normattiva2md`) i codici fondamentali il cui articolato manca in italia-corpus (civile, penale, procedura civile, navigazione, penali militari) e li salva in `EXTRA_CORPUS_PATH` (`data/codici-extra`, tracciato), che il bootstrap indicizza insieme al clone del corpus. Il parser riconosce gli articoli a 2-4 cancelletti con rubrica sia dopo il trattino (italia-corpus) sia tra parentesi (Normattiva), e riconosce come confine di chunk anche una intestazione `## Allegato I`, perché gli allegati portano contenuto normativo a sé (le diciotto disposizioni transitorie della Costituzione stanno lì) che altrimenti finirebbe in coda all'ultimo articolo e ne prenderebbe il numero in citazione; il numero è obbligatorio, così `## Allegati` dei codici resta testo. La registrazione in Claude Code è versionata in `.mcp.json` in radice; per Claude Desktop si usa la voce in `deployment.md`.
 
-Il package `fonte` copre le classi di atti che italia-corpus non contiene affatto, perché
-rispecchia il catalogo delle collezioni preconfezionate di Normattiva e quel catalogo non
-comprende la legge ordinaria (misura e diagnosi in `docs/audit-completezza-corpus.md`).
-`fonte/normattiva.py` è il client dell'API Open Data pubblica di Normattiva, scritto con il solo
-`urllib` di stdlib: espone la tipologica delle denominazioni di atto (l'elenco canonico contro cui
-misurare la completezza, letto dalla fonte a ogni esecuzione e non cablato), la ricerca avanzata
-per conteggio ed enumerazione paginata fino a mille elementi, e l'export asincrono che restituisce
-un archivio ZIP di file Akoma Ntoso consolidati alla vigenza richiesta. Il polling sullo stato
-dell'export è deliberatamente lento (25s iniziali, fino a 90s) e tratta l'HTTP 409 del WAF come
-"non ancora pronto": misurato, un polling ogni due secondi riceve 409 per oltre due minuti senza
-mai vedere un export già pronto, quindi interrogare meno spesso è più veloce. `fonte/akn.py`
-converte l'XML nello stesso Markdown con frontmatter del corpus, preservando i numeri di comma,
-escludendo il contenuto delle note (Normattiva vi annida il testo integrale delle norme richiamate,
-che in un indice per articolo è rumore che sposta il ranking) e ricostruendo la rubrica dal primo
-capoverso non numerato solo sotto condizioni strette. `fonte/recupero.py` scrive gli atti in
-`SUPPL_CORPUS_PATH` (`data/normattiva-suppl`, ignorato da git perché voluminoso e rigenerabile) e
-raggruppa le lacune in lotti contigui per data, con una lista bianca di URN ammesse che è un
-requisito di correttezza e non un'ottimizzazione: l'export di un periodo contiene anche gli atti
-abrogati, e scriverli col frontmatter `vigente: true` sarebbe peggio della loro assenza.
-`config.radici_corpus()` restituisce tutte le radici da indicizzare, così bootstrap e aggiornamento
-non nominano i singoli percorsi. Gli script sono `scripts/fetch_normattiva.py` (recupero massivo,
-con `--dry-run` per misurare e `--minuti` per lavorare a budget, dato che il recupero storico dal
-1861 dura ore), `scripts/fetch_atto.py` (un singolo atto per URN, che generalizza ciò che
-`fetch_codici.py` fa solo sui cinque codici) e `scripts/check_completezza.py` (il controllo che
-fallisce dicendo cosa manca).
+Il package `fonte` copre le classi di atti che italia-corpus non contiene affatto, perché rispecchia il catalogo delle collezioni preconfezionate di Normattiva e quel catalogo non comprende la legge ordinaria (misura e diagnosi in `docs/audit-completezza-corpus.md`). `fonte/normattiva.py` è il client dell'API Open Data pubblica di Normattiva, scritto con il solo `urllib` di stdlib: espone la tipologica delle denominazioni di atto (l'elenco canonico contro cui misurare la completezza, letto dalla fonte a ogni esecuzione e non cablato), la ricerca avanzata per conteggio ed enumerazione paginata fino a mille elementi, e l'export asincrono che restituisce un archivio ZIP di file Akoma Ntoso consolidati alla vigenza richiesta. Il polling sullo stato dell'export è deliberatamente lento (25s iniziali, fino a 90s) e tratta l'HTTP 409 del WAF come "non ancora pronto": misurato, un polling ogni due secondi riceve 409 per oltre due minuti senza mai vedere un export già pronto, quindi interrogare meno spesso è più veloce. `fonte/akn.py` converte l'XML nello stesso Markdown con frontmatter del corpus, preservando i numeri di comma, escludendo il contenuto delle note (Normattiva vi annida il testo integrale delle norme richiamate, che in un indice per articolo è rumore che sposta il ranking) e ricostruendo la rubrica dal primo capoverso non numerato solo sotto condizioni strette. `fonte/recupero.py` scrive gli atti in `SUPPL_CORPUS_PATH` (`data/normattiva-suppl`, ignorato da git perché voluminoso e rigenerabile) e raggruppa le lacune in lotti contigui per data, con una lista bianca di URN ammesse che è un requisito di correttezza e non un'ottimizzazione: l'export di un periodo contiene anche gli atti abrogati, e scriverli col frontmatter `vigente: true` sarebbe peggio della loro assenza. `config.radici_corpus()` restituisce tutte le radici da indicizzare, così bootstrap e aggiornamento non nominano i singoli percorsi. Gli script sono `scripts/fetch_normattiva.py` (recupero massivo, con `--dry-run` per misurare e `--minuti` per lavorare a budget, dato che il recupero storico dal 1861 dura ore), `scripts/fetch_atto.py` (un singolo atto per URN, che generalizza ciò che `fetch_codici.py` fa solo sui cinque codici) e `scripts/check_completezza.py` (il controllo che fallisce dicendo cosa manca).
 
 ## Riferimenti a snippet
 

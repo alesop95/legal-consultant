@@ -42,6 +42,4 @@ La pubblicazione del predetto codice si eseguira' col trasmetterne un esemplare 
  
  Mussolini - Rocco. 
  
-Visto, il Guardasigilli: Rocco. 
- Registrato alla Corte dei conti, addi' 22 ottobre 1930-VIIII 
- Atti del Governo, registro 301, foglio 58. - Mancini.
+Visto, il Guardasigilli: Rocco. Registrato alla Corte dei conti, addi' 22 ottobre 1930-VIIII Atti del Governo, registro 301, foglio 58. - Mancini.
