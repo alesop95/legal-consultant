@@ -40,6 +40,11 @@ docs/completamento-corpus.md       come si colmano le lacune: scelta fra le stra
                                     Data di Normattiva, controllo di completezza rumoroso
 docs/giurisprudenza-fattibilita.md fonti, licenze e limiti di un'eventuale estensione alla
                                     giurisprudenza; conclusione restrittiva e motivata
+docs/dominio-compravendita-immobiliare.md
+                                    audit per dominio sulla compravendita residenziale:
+                                    copertura verificata atto per atto, lacune colmate e
+                                    lacuna residua, riferimenti da cui partire, limiti
+                                    strutturali del corpus su questa materia
 ```
 
 Memoria e meta-stato, sotto `.claude/memory/`, letti sempre a inizio sessione.

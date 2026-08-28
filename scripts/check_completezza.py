@@ -85,12 +85,36 @@ SENTINELLE = [
     ("REGIO DECRETO", "1398", 1930, "Codice penale"),
     ("REGIO DECRETO", "1443", 1940, "Codice di procedura civile"),
     ("LEGGE COSTITUZIONALE", "3", 2001, "Riforma del Titolo V"),
+    # Compravendita immobiliare residenziale. E' la materia su cui un privato consulta
+    # per primo uno strumento come questo, e attraversa fisco, edilizia, pubblicita'
+    # immobiliare e contratto: senza queste sentinelle il corpus poteva risultare
+    # completo pur non contenendo la norma che rende nullo l'atto di vendita.
+    ("DECRETO DEL PRESIDENTE DELLA REPUBBLICA", "131", 1986, "TU imposta di registro, agevolazione prima casa"),
+    ("DECRETO DEL PRESIDENTE DELLA REPUBBLICA", "601", 1973, "Imposta sostitutiva sui finanziamenti"),
+    ("DECRETO LEGISLATIVO", "122", 2005, "Tutela acquirenti di immobili da costruire"),
+    ("DECRETO LEGISLATIVO", "23", 2011, "Cedolare secca sulle locazioni"),
+    ("DECRETO LEGISLATIVO", "192", 2005, "Prestazione energetica degli edifici, APE"),
+    ("DECRETO LEGISLATIVO", "504", 1992, "Base imponibile ICI, ancora richiamata dall'IMU"),
+    ("DECRETO-LEGGE", "50", 2017, "Locazioni brevi"),
+    ("DECRETO-LEGGE", "69", 2024, "Salva Casa, tolleranze e stato legittimo"),
+    ("LEGGE", "160", 2019, "Disciplina dell'IMU"),
+    ("LEGGE", "266", 2005, "Prezzo-valore, art. 1 comma 497"),
+    ("LEGGE", "47", 1985, "Condono edilizio, menzioni urbanistiche in atto"),
+    ("LEGGE", "52", 1985, "Pubblicita' immobiliare, conformita' catastale in atto"),
+    ("LEGGE", "448", 1998, "Credito d'imposta per riacquisto della prima casa"),
 ]
 
 # Un atto presente ma privo di articolato non e' un atto presente: il codice penale nel
-# corpus a monte e' un guscio di quattro chunk con la sola formula di approvazione. Le
-# sentinelle che sono corpi normativi articolati devono superare questa soglia di chunk.
-_MIN_CHUNK_ARTICOLATO = 10
+# corpus a monte e' un guscio di quattro chunk con la sola formula di approvazione.
+#
+# La misura, pero', non puo' essere il numero di chunk. Le leggi finanziarie sono
+# formalmente composte da un solo articolo con centinaia di commi, e finiscono
+# nell'indice come due o tre chunk pur contenendo tutto: la legge 266/2005, che porta la
+# regola del prezzo-valore, sta in due chunk e mezzo milione di caratteri. Un criterio a
+# chunk le dichiarerebbe vuote, che e' il falso positivo peggiore per un controllo la cui
+# ragione d'essere e' non dare falsa sicurezza. Si misurano quindi i caratteri, che sono
+# cio' che conta davvero, e i chunk restano solo un'informazione a video.
+_MIN_CARATTERI_ARTICOLATO = 20_000
 _ARTICOLATI = {
     ("REGIO DECRETO", "262"), ("REGIO DECRETO", "1398"), ("REGIO DECRETO", "1443"),
     ("DECRETO LEGISLATIVO", "81"), ("DECRETO LEGISLATIVO", "152"),
@@ -98,8 +122,12 @@ _ARTICOLATI = {
     ("DECRETO DEL PRESIDENTE DELLA REPUBBLICA", "380"),
     ("DECRETO DEL PRESIDENTE DELLA REPUBBLICA", "309"),
     ("DECRETO DEL PRESIDENTE DELLA REPUBBLICA", "447"),
-    ("LEGGE", "194"), ("LEGGE", "184"), ("LEGGE", "833"), ("LEGGE", "241"),
-    ("LEGGE", "300"), ("DECRETO-LEGGE", "34"), ("COSTITUZIONE", ""),
+    ("DECRETO DEL PRESIDENTE DELLA REPUBBLICA", "131"),
+    ("DECRETO DEL PRESIDENTE DELLA REPUBBLICA", "601"),
+    ("DECRETO LEGISLATIVO", "122"), ("DECRETO LEGISLATIVO", "192"),
+    ("DECRETO LEGISLATIVO", "504"), ("DECRETO-LEGGE", "50"), ("DECRETO-LEGGE", "69"),
+    ("LEGGE", "266"), ("LEGGE", "194"), ("LEGGE", "184"), ("LEGGE", "833"),
+    ("LEGGE", "241"), ("LEGGE", "300"), ("DECRETO-LEGGE", "34"), ("COSTITUZIONE", ""),
 }
 
 # Copertura minima accettabile per tipologia, sotto la quale la classe e' considerata in
@@ -112,14 +140,18 @@ _COPERTURA_MINIMA = 0.95
 _DIMENSIONE_MINIMA = 100
 
 
-def _indice_corpus(conn) -> dict[tuple[str, str, str], int]:
-    """(tipo, numero, anno) -> numero di chunk, per ogni atto dell'indice."""
-    out: dict[tuple[str, str, str], int] = {}
-    sql = "SELECT tipo, numero, data, COUNT(*) FROM chunks GROUP BY tipo, numero, data"
-    for tipo, numero, data, n in conn.execute(sql):
+def _indice_corpus(conn) -> dict[tuple[str, str, str], tuple[int, int]]:
+    """(tipo, numero, anno) -> (numero di chunk, caratteri totali) per ogni atto."""
+    out: dict[tuple[str, str, str], tuple[int, int]] = {}
+    sql = (
+        "SELECT tipo, numero, data, COUNT(*), COALESCE(SUM(LENGTH(testo)), 0) "
+        "FROM chunks GROUP BY tipo, numero, data"
+    )
+    for tipo, numero, data, n, caratteri in conn.execute(sql):
         anno = str(data or "")[:4]
         chiave = ((tipo or "").strip().upper(), str(numero or "").strip(), anno)
-        out[chiave] = out.get(chiave, 0) + int(n)
+        chunk_precedenti, caratteri_precedenti = out.get(chiave, (0, 0))
+        out[chiave] = (chunk_precedenti + int(n), caratteri_precedenti + int(caratteri or 0))
     return out
 
 
@@ -138,24 +170,31 @@ def _controllo_sentinelle(conn, quiet: bool) -> list[str]:
     problemi: list[str] = []
     if not quiet:
         print("Controllo dal basso: atti sentinella")
-        print(f"  {'ESITO':<12} {'ATTO':<34} {'CHUNK':>6}  DESCRIZIONE")
+        print(f"  {'ESITO':<12} {'ATTO':<34} {'CHUNK':>6} {'CARATTERI':>10}  DESCRIZIONE")
     for tipo, numero, anno, descrizione in SENTINELLE:
         chiave = (tipo, numero, str(anno))
-        n = atti.get(chiave)
+        misura = atti.get(chiave)
         etichetta = f"{tipo.split()[0].title()} {numero}/{anno}".replace(" /", " ")
-        if n is None:
+        if misura is None:
+            n, caratteri = None, None
             esito = "ASSENTE"
             problemi.append(f"atto atteso assente: {tipo} n. {numero} del {anno} ({descrizione})")
-        elif (tipo, numero) in _ARTICOLATI and n < _MIN_CHUNK_ARTICOLATO:
-            esito = "SENZA TESTO"
-            problemi.append(
-                f"atto presente ma senza articolato: {tipo} n. {numero} del {anno} "
-                f"({descrizione}): {n} chunk, attesi almeno {_MIN_CHUNK_ARTICOLATO}"
-            )
         else:
-            esito = "ok"
+            n, caratteri = misura
+            if (tipo, numero) in _ARTICOLATI and caratteri < _MIN_CARATTERI_ARTICOLATO:
+                esito = "SENZA TESTO"
+                problemi.append(
+                    f"atto presente ma senza articolato: {tipo} n. {numero} del {anno} "
+                    f"({descrizione}): {caratteri} caratteri, attesi almeno "
+                    f"{_MIN_CARATTERI_ARTICOLATO}"
+                )
+            else:
+                esito = "ok"
         if not quiet:
-            print(f"  {esito:<12} {etichetta:<34} {str(n if n is not None else '-'):>6}  {descrizione}")
+            print(
+                f"  {esito:<12} {etichetta:<34} {str(n if n is not None else '-'):>6} "
+                f"{str(caratteri if caratteri is not None else '-'):>10}  {descrizione}"
+            )
     return problemi
 
 
