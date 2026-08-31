@@ -1,6 +1,6 @@
 # Copertura del dominio: compravendita immobiliare residenziale
 
-> Verifica del 28 agosto 2026. Mappa le norme che governano l'acquisto di un immobile residenziale sul contenuto effettivo del corpus, dichiara le lacune trovate e quelle colmate, e riporta il modo di interrogare il server su questa materia. E' il primo audit per dominio del progetto, e nasce da un uso reale: la valutazione di un acquisto immobiliare condotta con lo strumento in `E:\real-estate`.
+> Verifica del 28 agosto 2026, estesa il 31 agosto 2026 con il secondo passaggio sulle garanzie legali. Mappa le norme che governano l'acquisto di un immobile residenziale sul contenuto effettivo del corpus, dichiara le lacune trovate e quelle colmate, e riporta il modo di interrogare il server su questa materia. E' il primo audit per dominio del progetto, e nasce da un uso reale: la valutazione di un acquisto immobiliare condotta con lo strumento in `E:\real-estate`.
 
 ## Perche' un audit per dominio
 
@@ -49,6 +49,45 @@ La verifica ha confermato che il testo unico dell'edilizia nel corpus e' il cons
 Restano invece fuori dal corpus, e vanno dichiarati all'utente quando la domanda li tocca, tre insiemi di fonti. I decreti ministeriali, fra cui il decreto 37 del 2008 sulla conformita' degli impianti, che nella prassi della compravendita e' documento richiesto ad ogni rogito. Gli accordi territoriali sul canone concordato, che sono atti locali stipulati fra le associazioni di categoria di ciascun Comune e determinano il canone applicabile: non sono legislazione statale e nessun corpus nazionale li conterra' mai. Le delibere comunali sulle aliquote IMU, per la stessa ragione. Su tutte e tre la risposta corretta e' indicare dove si trovano, non cercare nel corpus un surrogato.
 
 Va infine ricordato il limite gia' noto e documentato in `docs/giurisprudenza-fattibilita.md`: il corpus e' legislazione, non giurisprudenza. Su una materia come la conformita' catastale, dove la distinzione fra irregolarita' che producono nullita' e difetti minori e' opera della Cassazione e non del testo di legge, il consulente puo' citare la norma ma non l'interpretazione consolidata, e deve dirlo.
+
+## Secondo passaggio: le garanzie legali e le dichiarazioni in atto
+
+Verifica del 31 agosto 2026. Il primo audit ha coperto il ramo fiscale, quello edilizio e quello della pubblicita' immobiliare, cioe' le norme che dicono che cosa si compra e quanto si paga. Questo secondo passaggio copre il ramo che dice **che cosa resta se qualcosa emerge dopo**, ed e' nato da un uso reale distinto: la costruzione, nello strumento in `E:\real-estate`, dell'elenco dei documenti da farsi consegnare prima della proposta, condotta chiedendosi non che cosa serve al tecnico ma che cosa chiederebbe un legale.
+
+La differenza fra i due rami non e' accademica. Il primo produce documenti da archiviare; il secondo produce frasi scritte dentro la proposta e dentro il rogito, e sono quelle frasi a determinare quali rimedi restano disponibili. L'articolo 1482 del codice civile e' l'esempio che chiarisce il punto: il compratore puo' sospendere il prezzo e ottenere la risoluzione se il bene risulta gravato da garanzie reali o da vincoli da pignoramento o sequestro non dichiarati dal venditore e da lui ignorati, mentre se li conosceva gli resta la sola garanzia per evizione. La stessa situazione di fatto, quindi, produce due esiti opposti a seconda di che cosa fu dichiarato per iscritto.
+
+### Norme verificate in questo passaggio
+
+| Norma | Cosa decide | Dove sta nel corpus | Esito |
+|---|---|---|---|
+| Artt. 1482 e 1489 c.c. | Rimedi per gravami reali non dichiarati e per oneri o diritti di terzi non apparenti | `codici-extra/Codici/codice-civile.md` | presente |
+| Artt. 1483-1488 c.c. | Garanzia per evizione totale e parziale | stesso file | presente |
+| Art. 2882 c.c. | Formalita' per la cancellazione dell'ipoteca, atto di assenso del creditore | stesso file | presente |
+| Art. 732 c.c. | Prelazione dei coeredi e riscatto contro l'acquirente e ogni avente causa | stesso file | presente |
+| Artt. 167 e 2645-ter c.c. | Fondo patrimoniale e atti di destinazione trascritti | stesso file | presente |
+| Art. 2901 c.c. | Revocatoria ordinaria, termine quinquennale | stesso file | presente |
+| Art. 40-bis d.lgs. 385/1993 | Cancellazione semplificata dell'ipoteca e giustificato motivo ostativo | `Testi Unici/Testo unico delle leggi in materia bancaria e creditizia.md` | presente |
+| Art. 166 c. 3 d.lgs. 14/2019 | Esenzione da revocatoria per preliminari trascritti a giusto prezzo su abitazioni principali | `Codici/Codice della crisi dimpresa e dellinsolvenza...` | presente |
+| Artt. 9-bis, 24, 30, 34-bis, 93, 94 DPR 380/2001 | Stato legittimo, agibilita', certificato di destinazione urbanistica, tolleranze, sismica | `Testi Unici/Testo unico ... in materia edilizia. Testo A.md` | presente |
+| Art. 40 c. 3 legge 47/1985 | Dichiarazione sostitutiva per le opere iniziate prima del 1 settembre 1967 | `normattiva-suppl/Leggi/legge-1985-02-28-47.md` | presente, dalla lacuna colmata nel primo passaggio |
+| Artt. 47 e 76 DPR 445/2000 | Dichiarazione sostitutiva di atto di notorieta' e sanzione penale per le mendaci | Testo B e Testo C, vedi trappola sotto | presente, con avvertenza |
+| Art. 35 c. 22 DL 223/2006 | Dichiarazione in atto su modalita' di pagamento e mediazione | Finanziaria 2007, vedi trappola sotto | presente, con avvertenza |
+
+Nessuna lacuna nuova. Il ramo delle garanzie risulta coperto, il che era prevedibile perche' vive quasi tutto nel codice civile, ma non era verificato.
+
+### Due trappole di recupero, che non sono lacune ma producono lo stesso effetto
+
+Sono i due casi in cui l'atto c'e', la ricerca lo trova, e cio' che restituisce non e' la norma cercata. Vanno documentati perche' un consulente che si fermasse al primo risultato risponderebbe male con la stessa sicurezza con cui risponde bene.
+
+**Il DPR 445/2000 e' spezzato in Testo B e Testo C.** Il decreto sulla documentazione amministrativa e' un testo misto, e il corpus lo riflette in due file, la parte legislativa fra i decreti legislativi e quella regolamentare fra i DPR. L'articolo 47, che disciplina la dichiarazione sostitutiva di atto di notorieta', nel Testo B compare come intestazione con i commi numerati e vuoti; il testo operativo, cioe' che la dichiarazione riguarda stati, qualita' e fatti a diretta conoscenza dell'interessato, sta nel Testo C. Chi interroga il solo Testo B conclude che l'articolo non abbia contenuto. L'articolo 76, con la sanzione penale, sta invece nel Testo B. Una domanda sulla dichiarazione sostitutiva richiede quindi entrambi i file.
+
+**L'articolo 35 comma 22 del DL 223/2006 non si legge nel DL.** Il file della legge di conversione non porta il testo vigente della disposizione sulle analitiche modalita' di pagamento e sulla mediazione, che e' stata modificata dalla legge finanziaria 2007: il testo attuale si trova li'. E' il caso generale della disposizione piu' volte novellata il cui atto originario resta nel corpus nella versione superata, e vale la pena tenerlo presente come classe di problema, non come singolo caso.
+
+### La lacuna aperta, riverificata
+
+La legge 448 del 1998, il cui articolo 7 disciplina il credito d'imposta per il riacquisto della prima casa, resta assente. La verifica e' stata ripetuta in due modi indipendenti. Il recupero forzato, `fetch_atto.py urn:nir:stato:legge:1998-12-23;448 --forza`, termina con "Nessun atto scritto: la fonte non ha restituito l'atto richiesto". La ricerca dell'URN nell'intero corpus lo trova solo come collegamento dentro altri atti che la citano, mai come file proprio; e la ricerca per titolo non restituisce nulla di pertinente. Da escludere la confusione con la legge 449 del 1998, che e' la finanziaria 1999 e che nel corpus c'e': e' un atto diverso, e non contiene la disposizione.
+
+Fino a quando la via di accesso non si trova, sulle domande relative al credito d'imposta per riacquisto il consulente deve dichiarare che la norma non e' nel corpus.
 
 ## Come interrogare il corpus su questa materia
 
