@@ -2572,7 +2572,7 @@ AGGIORNAMENTO (112a) Il D.Lgs. 19 febbraio 1998, n. 51, come modificato dalla L.
 
 ### Art. 485. (Chiamato all'eredita' che e' nel possesso di beni)
 
-Il chiamato all'eredita', quando a qualsiasi titolo e' nel possesso di beni ereditari, deve fare l'inventario entro tre mesi dal giorno dell'apertura della successione o della notizia della devoluta eredita'. Se entro questo termine lo ha cominciato ma non e' stato in grado di completarlo, puo' ottenere dal giudice di pace del luogo in cui si e' aperta la successione una proroga che, salvo gravi circostanze, non deve eccedere i tre mesi.(111) (112a) (273) (300) (341) ((351)) Trascorso tale termine senza che l'inventario sia stato compiuto, il chiamato all'eredita' e' considerato erede puro e semplice. Compiuto l'inventario, il chiamato che non abbia ancora fatto la dichiarazione a norma dell'art. 484 ha un termine di quaranta giorni da quello del compimento dell'inventario medesimo, per deliberare se accetta o rinunzia all'eredita'. Trascorso questo termine senza che abbia deliberato, e' considerato erede puro e semplice.
+Il chiamato all'eredita', quando a qualsiasi titolo e' nel possesso di beni ereditari, deve fare l'inventario entro tre mesi dal giorno dell'apertura della successione o della notizia della devoluta eredita'. Se entro questo termine lo ha cominciato ma non e' stato in grado di completarlo, puo' ottenere dal ((giudice di pace)) del luogo in cui si e' aperta la successione una proroga che, salvo gravi circostanze, non deve eccedere i tre mesi.(111) (112a) ((273)) ((300)) ((341)) ((351)) Trascorso tale termine senza che l'inventario sia stato compiuto, il chiamato all'eredita' e' considerato erede puro e semplice. Compiuto l'inventario, il chiamato che non abbia ancora fatto la dichiarazione a norma dell'art. 484 ha un termine di quaranta giorni da quello del compimento dell'inventario medesimo, per deliberare se accetta o rinunzia all'eredita'. Trascorso questo termine senza che abbia deliberato, e' considerato erede puro e semplice.
 
 
 
@@ -2586,7 +2586,7 @@ AGGIORNAMENTO (300) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 3
 
 AGGIORNAMENTO (341) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, convertito con modificazioni dalla L. 3 ottobre 2025, n. 148, ha disposto (con l'art. 32, comma 3) che la modifica di cui al primo comma del presente articolo entra in vigore il 31 ottobre 2026.
 
-AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027"
+AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 12 giugno 2026, n. 100, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027".
 
 ### Art. 486. (Poteri)
 
@@ -3234,7 +3234,7 @@ I testamenti previsti in questa sezione sono nulli quando manca la redazione in 
 
 ### Art. 620. (Pubblicazione del testamento olografo)
 
-Chiunque e' in possesso di un testamento olografo deve presentarlo a un notaio per la pubblicazione, appena ha notizia della morte del testatore. Chiunque crede di avervi interesse puo' chiedere, con ricorso al giudice di pace del luogo in cui si e' aperta la successione, che sia fissato un termine per la presentazione.(111) (112a) (273) (300) (341) ((351)) Il notaio procede alla pubblicazione del testamento in presenza di due testimoni, redigendo nella forma degli atti pubblici un verbale nel quale descrive lo stato del testamento, ne riproduce il contenuto e fa menzione della sua apertura, se e' stato presentato chiuso con sigillo. Il verbale e' sottoscritto dalla persona che presenta il testamento, dai testimoni e dal notaio. Ad esso sono uniti la carta in cui e' scritto il testamento, vidimata in ciascun mezzo foglio dal notaio e dai testimoni, e l'estratto dell'atto di morte del testatore o copia del provvedimento che ordina l'apertura degli atti di ultima volonta' dell'assente o della sentenza che dichiara la morte presunta. Nel caso in cui il testamento e' stato depositato dal testatore presso un notaio, la pubblicazione e' eseguita dal notaio depositario. Avvenuta la pubblicazione, il testamento olografo ha esecuzione. Per giustificati motivi, su istanza di chiunque vi ha interesse, il giudice di pace puo' disporre che periodi o frasi di carattere non patrimoniale siano cancellati dal testamento e omessi nelle copie che fossero richieste, salvo che l'autorita' giudiziaria ordini il rilascio di copia integrale.(111) (112a) (273) (300) (341) ((351))
+Chiunque e' in possesso di un testamento olografo deve presentarlo a un notaio per la pubblicazione, appena ha notizia della morte del testatore. Chiunque crede di avervi interesse puo' chiedere, con ricorso al ((giudice di pace del luogo)) in cui si e' aperta la successione, che sia fissato un termine per la presentazione.(111) (112a) ((273)) ((300)) ((341)) ((351)) Il notaio procede alla pubblicazione del testamento in presenza di due testimoni, redigendo nella forma degli atti pubblici un verbale nel quale descrive lo stato del testamento, ne riproduce il contenuto e fa menzione della sua apertura, se e' stato presentato chiuso con sigillo. Il verbale e' sottoscritto dalla persona che presenta il testamento, dai testimoni e dal notaio. Ad esso sono uniti la carta in cui e' scritto il testamento, vidimata in ciascun mezzo foglio dal notaio e dai testimoni, e l'estratto dell'atto di morte del testatore o copia del provvedimento che ordina l'apertura degli atti di ultima volonta' dell'assente o della sentenza che dichiara la morte presunta. Nel caso in cui il testamento e' stato depositato dal testatore presso un notaio, la pubblicazione e' eseguita dal notaio depositario. Avvenuta la pubblicazione, il testamento olografo ha esecuzione. Per giustificati motivi, su istanza di chiunque vi ha interesse, il ((giudice di pace)) puo' disporre che periodi o frasi di carattere non patrimoniale siano cancellati dal testamento e omessi nelle copie che fossero richieste, salvo che l'autorita' giudiziaria ordini il rilascio di copia integrale.(111) (112a) ((273)) ((300)) ((341)) ((351))
 
 
 
@@ -3248,11 +3248,11 @@ AGGIORNAMENTO (300) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 3
 
 AGGIORNAMENTO (341) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, convertito con modificazioni dalla L. 3 ottobre 2025, n. 148, ha disposto (con l'art. 32, comma 3) che le modifiche di cui ai commi 2 e 6 del presente articolo entrano in vigore il 31 ottobre 2026.
 
-AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027"
+AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 12 giugno 2026, n. 100, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027".
 
 ### Art. 621. (Pubblicazione del testamento segreto)
 
-Il testamento segreto deve essere aperto e pubblicato dal notaio appena gli perviene la notizia della morte del testatore. Chiunque crede di avervi interesse puo' chiedere, con ricorso al giudice di pace del luogo in cui si e' aperta la successione, che sia fissato un termine per l'apertura e la pubblicazione.(111) (112a) (273) (300) (341) ((351)) Si applicano le disposizioni del terzo comma dell'articolo 620.
+Il testamento segreto deve essere aperto e pubblicato dal notaio appena gli perviene la notizia della morte del testatore. Chiunque crede di avervi interesse puo' chiedere, con ricorso al ((giudice di pace del luogo)) in cui si e' aperta la successione, che sia fissato un termine per l'apertura e la pubblicazione.(111) (112a) ((273)) ((300)) ((341)) ((351)) Si applicano le disposizioni del terzo comma dell'articolo 620.
 
 
 
@@ -3266,7 +3266,7 @@ AGGIORNAMENTO (300) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 3
 
 AGGIORNAMENTO (341) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, convertito con modificazioni dalla L. 3 ottobre 2025, n. 148, ha disposto (con l'art. 32, comma 3) che la modifica di cui al primo comma del presente articolo entra in vigore il 31 ottobre 2026.
 
-AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027"
+AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 12 giugno 2026, n. 100, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027".
 
 ### Art. 622. (Comunicazione dei testamenti alla pretura)
 
@@ -3746,7 +3746,7 @@ La divisione nella quale il testatore non abbia compreso qualcuno dei legittimar
 
 ### Art. 736. (Consegna dei documenti)
 
-Compiuta la divisione, si devono rimettere a ciascuno dei condividenti i documenti relativi ai beni e diritti particolarmente loro assegnati. I documenti di una proprieta' che e' stata divisa rimangono a quello che ne ha la parte maggiore, con l'obbligo di comunicarli agli altri condividenti che vi hanno interesse, ogni qualvolta se ne faccia richiesta. Gli stessi documenti, se la proprieta' e' divisa in parti eguali, e quelli comuni all'intera eredita' si consegnano alla persona scelta a tal fine da tutti gli interessati, la quale ha obbligo di comunicarli a ciascuno di essi, a ogni loro domanda. Se vi e' contrasto nella scelta, la persona e' determinata con decreto dal giudice di pace del luogo dell'aperta successione, su ricorso di alcuno degli interessati, sentiti gli altri.(111) (112a) (273) (300) (341) ((351))
+Compiuta la divisione, si devono rimettere a ciascuno dei condividenti i documenti relativi ai beni e diritti particolarmente loro assegnati. I documenti di una proprieta' che e' stata divisa rimangono a quello che ne ha la parte maggiore, con l'obbligo di comunicarli agli altri condividenti che vi hanno interesse, ogni qualvolta se ne faccia richiesta. Gli stessi documenti, se la proprieta' e' divisa in parti eguali, e quelli comuni all'intera eredita' si consegnano alla persona scelta a tal fine da tutti gli interessati, la quale ha obbligo di comunicarli a ciascuno di essi, a ogni loro domanda. Se vi e' contrasto nella scelta, la persona e' determinata con decreto dal ((giudice di pace)) del luogo dell'aperta successione, su ricorso di alcuno degli interessati, sentiti gli altri.(111) (112a) ((273)) ((300)) ((341)) ((351))
 
 
 
@@ -3760,7 +3760,7 @@ AGGIORNAMENTO (300) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 3
 
 AGGIORNAMENTO (341) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, convertito con modificazioni dalla L. 3 ottobre 2025, n. 148, ha disposto (con l'art. 32, comma 3) che la modifica di cui al secondo comma del presente articolo entra in vigore il 31 ottobre 2026.
 
-AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027"
+AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 12 giugno 2026, n. 100, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027".
 
 ### Art. 737. 
 
@@ -5770,7 +5770,7 @@ Se il creditore rifiuta di accettare l'offerta reale o non si presenta per ricev
 
 ### Art. 1211. (Cose deperibili o di dispendiosa custodia)
 
-Se le cose non possono essere conservate o sono deteriorabili, oppure se le spese della loro custodia sono eccessive, il debitore, dopo l'offerta reale o l'intimazione di ritirarle, puo' farsi autorizzare dal giudice di pace a venderle nei modi stabiliti per le cose pignorate e a depositarne il prezzo. (111) (112a) (273) (300) (341) ((351))
+Se le cose non possono essere conservate o sono deteriorabili, oppure se le spese della loro custodia sono eccessive, il debitore, dopo l'offerta reale o l'intimazione di ritirarle, puo' farsi autorizzare dal ((giudice di pace)) a venderle nei modi stabiliti per le cose pignorate e a depositarne il prezzo. (111) (112a) ((273)) ((300)) ((341)) ((351))
 
 
 
@@ -5784,7 +5784,7 @@ AGGIORNAMENTO (300) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 3
 
 AGGIORNAMENTO (341) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, convertito con modificazioni dalla L. 3 ottobre 2025, n. 148, ha disposto (con l'art. 32, comma 3) che la modifica di cui al primo comma del presente articolo entra in vigore il 31 ottobre 2026.
 
-AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027"
+AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 12 giugno 2026, n. 100, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027".
 
 ### Art. 1212. (Requisiti del deposito)
 
@@ -7066,7 +7066,7 @@ In caso di divergenza sulla qualita' o condizione della cosa, il venditore o il 
 
 ### Art. 1514. (Deposito della cosa venduta)
 
-Se il compratore non si presenta per ricevere la cosa acquistata, il venditore puo' depositarla, per conto e a spese del compratore medesimo, in un locale di pubblico deposito, oppure in altro locale idoneo determinato dal giudice di pace del luogo in cui la consegna doveva essere fatta. (111) (112a) (273) (300) (341) ((351)) Il venditore deve dare al compratore pronta notizia del deposito eseguito.
+Se il compratore non si presenta per ricevere la cosa acquistata, il venditore puo' depositarla, per conto e a spese del compratore medesimo, in un locale di pubblico deposito, oppure in altro locale idoneo determinato dal ((giudice di pace)) del luogo in cui la consegna doveva essere fatta. (111) (112a) ((273)) ((300)) ((341)) ((351)) Il venditore deve dare al compratore pronta notizia del deposito eseguito.
 
 
 
@@ -7080,11 +7080,11 @@ AGGIORNAMENTO (300) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 3
 
 AGGIORNAMENTO (341) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, convertito con modificazioni dalla L. 3 ottobre 2025, n. 148, ha disposto (con l'art. 32, comma 3) che la modifica di cui al primo comma del presente articolo entra in vigore il 31 ottobre 2026.
 
-AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027"
+AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 12 giugno 2026, n. 100, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027".
 
 ### Art. 1515. (Esecuzione coattiva per inadempimento del compratore)
 
-Se il compratore non adempie l'obbligazione di pagare il prezzo, il venditore puo' far vendere senza ritardo la cosa per conto e a spese di lui. La vendita e' fatta all'incanto a mezzo di una persona autorizzata a tali atti o, in mancanza di essa nel luogo in cui la vendita deve essere eseguita, a mezzo di un ufficiale giudiziario. Il venditore deve dare tempestiva notizia al compratore del giorno, del luogo e dell'ora in cui la vendita sara' eseguita. Se la cosa ha un prezzo corrente, stabilito per atto della pubblica autorita' o da norme corporative, ovvero risultante da listini di borsa o da mercuriali, la vendita puo' essere fatta senza incanto, al prezzo corrente, a mezzo delle persone indicate nel comma precedente o di un commissario nominato dal giudice di pace. In tal caso il venditore deve dare al compratore pronta notizia della vendita. (111) (112a) (273) (300) (341) ((351)) Il venditore ha diritto alla differenza tra il prezzo convenuto e il ricavo netto della vendita, oltre al risarcimento del maggior danno.
+Se il compratore non adempie l'obbligazione di pagare il prezzo, il venditore puo' far vendere senza ritardo la cosa per conto e a spese di lui. La vendita e' fatta all'incanto a mezzo di una persona autorizzata a tali atti o, in mancanza di essa nel luogo in cui la vendita deve essere eseguita, a mezzo di un ufficiale giudiziario. Il venditore deve dare tempestiva notizia al compratore del giorno, del luogo e dell'ora in cui la vendita sara' eseguita. Se la cosa ha un prezzo corrente, stabilito per atto della pubblica autorita' o da norme corporative, ovvero risultante da listini di borsa o da mercuriali, la vendita puo' essere fatta senza incanto, al prezzo corrente, a mezzo delle persone indicate nel comma precedente o di un commissario nominato ((dal giudice di pace)). In tal caso il venditore deve dare al compratore pronta notizia della vendita. (111) (112a) ((273)) ((300)) ((341)) ((351)) Il venditore ha diritto alla differenza tra il prezzo convenuto e il ricavo netto della vendita, oltre al risarcimento del maggior danno.
 
 
 
@@ -7097,6 +7097,8 @@ AGGIORNAMENTO (273) Il D.Lgs. 13 luglio 2017, n. 116 ha disposto (con l'art. 32,
 AGGIORNAMENTO (300) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 30 dicembre 2019, n. 162, convertito con modificazioni dalla L. 28 febbraio 2020, n. 8, ha disposto (con l'art. 32, comma 3) che la modifica di cui al terzo comma del presente articolo entra in vigore il 31 ottobre 2025.
 
 AGGIORNAMENTO (341) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, convertito con modificazioni dalla L. 3 ottobre 2025, n. 148, ha disposto (con l'art. 32, comma 3) che la modifica di cui al terzo comma del presente articolo entra in vigore il 31 ottobre 2026.
+
+AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 12 giugno 2026, n. 100, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027".
 
 ### Art. 1516. (Esecuzione coattiva per inadempimento del venditore)
 
@@ -8458,7 +8460,7 @@ Se la cassetta e' intestata a piu' persone, l'apertura di essa e' consentita sin
 
 ### Art. 1841. (Apertura forzata della cassetta)
 
-Quando il contratto e' scaduto, la banca, previa intimazione all'intestatario e decorsi sei mesi dalla data della medesima, puo' chiedere al giudice di pace l'autorizzazione ad aprire la cassetta. L'intimazione puo' farsi anche mediante raccomandata con avviso di ricevimento. (273) (300) (341) ((351)) L'apertura si esegue con l'assistenza di un notaio all'uopo designato e con le cautele che il giudice di pace ritiene opportune. (273) (300) (341) ((351)) Il giudice di pace puo' dare le disposizioni necessarie per la conservazione degli oggetti rinvenuti e puo' ordinare la vendita di quella parte di essi che occorra al soddisfacimento di quanto e' dovuto alla banca per canoni e spese. (273) (300) (341) ((351)) (111) (112a)
+Quando il contratto e' scaduto, la banca, previa intimazione all'intestatario e decorsi sei mesi dalla data della medesima, puo' chiedere al ((giudice di pace)) l'autorizzazione ad aprire la cassetta. L'intimazione puo' farsi anche mediante raccomandata con avviso di ricevimento. ((273)) ((300)) ((341)) ((351)) L'apertura si esegue con l'assistenza di un notaio all'uopo designato e con le cautele che il ((giudice di pace)) ritiene opportune. ((273)) ((300)) ((341)) ((351)) Il ((giudice di pace)) puo' dare le disposizioni necessarie per la conservazione degli oggetti rinvenuti e puo' ordinare la vendita di quella parte di essi che occorra al soddisfacimento di quanto e' dovuto alla banca per canoni e spese. ((273)) ((300)) ((341)) ((351)) (111) (112a)
 
 
 
@@ -8472,7 +8474,7 @@ AGGIORNAMENTO (300) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 3
 
 AGGIORNAMENTO (341) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, convertito con modificazioni dalla L. 3 ottobre 2025, n. 148, ha disposto (con l'art. 32, comma 3) che le modifiche di cui ai commi 1, 2 e 3 del presente articolo entrano in vigore il 31 ottobre 2026.
 
-AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 8 agosto 2025, n. 117, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027"
+AGGIORNAMENTO (351) Il D.Lgs. 13 luglio 2017, n. 116, come modificato dal D.L. 12 giugno 2026, n. 100, ha disposto (con l'art. 32, comma 3) che "Le disposizioni dell'articolo 27 entrano in vigore il 31 ottobre 2027".
 
 ### Art. 1842. (Nozione)
 
