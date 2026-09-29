@@ -79,7 +79,7 @@ titolo "Controlli"
 b=""; m=""; o=""
 [ $bundle = 1 ] && { b="--bundle"; m="--includi-modelli"; o="--oracle require"; }
 # nome|argomenti|file richiesto|solo bundle
-controlli="md-unwrap.py|--check $o .||0
+controlli="md-unwrap.py|--check --only-tracked $o .||0
 sync-readme.py|--check $b|README.md|0
 lint-md-commands.py|.||0
 lint-doc-references.py|--solo-vivi $b||0
@@ -148,6 +148,13 @@ else
     remoto="${remoto%%[[:space:]]*}"
     [ "$locale" = "$remoto" ] || { ko "HEAD $locale diverso dal remoto $remoto"; exit 1; }
     ok "HEAD e remoto coincidono su '$ramo' (${locale:0:7})"
+fi
+
+# Sul template, una modifica a .claude/ si propaga ai progetti solo con la passata di
+# allinea-tutti: lo si ricorda qui, dopo il push, invece di affidarlo alla memoria.
+if [ $bundle = 1 ] && [ -n "$python" ] && [ -f .claude/templates/tools/passata-in-sospeso.py ]; then
+    titolo "Propagazione ai progetti"
+    "$python" .claude/templates/tools/passata-in-sospeso.py | sed 's/^/   /'
 fi
 
 titolo "Impronta di ripresa"

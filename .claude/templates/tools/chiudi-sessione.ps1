@@ -126,7 +126,7 @@ $b = if ($bundle) { @("--bundle") } else { @() }
 $m = if ($bundle) { @("--includi-modelli") } else { @() }
 $o = if ($bundle) { @("--oracle", "require") } else { @() }
 $controlli = @(
-    @{ n = "md-unwrap.py";            a = @("--check") + $o + @(".") },
+    @{ n = "md-unwrap.py";            a = @("--check", "--only-tracked") + $o + @(".") },
     @{ n = "sync-readme.py";          a = @("--check") + $b; serve = "README.md" },
     @{ n = "lint-md-commands.py";     a = @(".") },
     @{ n = "lint-doc-references.py";  a = @("--solo-vivi") + $b },
@@ -217,6 +217,17 @@ if (-not $haOrigin) {
     $suRemoto = ($refRemota -split '\s+')[0]
     if ($locale -ne $suRemoto) { Ko "HEAD $locale diverso dal remoto $suRemoto"; exit 1 }
     Ok "HEAD e remoto coincidono su '$ramo' ($($locale.Substring(0,7)))"
+}
+
+# ---------------------------------------------------------------------------------------------
+# Sul template, una modifica a .claude/ si propaga ai progetti solo con la passata di
+# allinea-tutti: lo si ricorda qui, dopo il push, invece di affidarlo alla memoria.
+if ($bundle) {
+    $ps = Trova "passata-in-sospeso.py"
+    if ($ps -and $python) {
+        Titolo "Propagazione ai progetti"
+        & $python $ps | ForEach-Object { Write-Host "   $_" }
+    }
 }
 
 # ---------------------------------------------------------------------------------------------
