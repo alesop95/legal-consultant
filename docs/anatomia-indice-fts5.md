@@ -37,7 +37,20 @@ Qui sta una ridondanza che è utile vedere, anche se non è la voce principale. 
 
 La prima è il `VACUUM`, ed è giusto nominarla per toglierla di mezzo: la lista delle pagine libere è di 3237 pagine, cioè 13 MB su 3,23 GB. Non c'è niente da recuperare, l'indice non è gonfio di spazio sprecato.
 
-La seconda è normalizzare i metadati per atto, spostando le sette colonne `UNINDEXED` in una tabella ordinaria di atti e lasciando nei chunk un solo riferimento. Vale circa 250 MB, cioè l'otto per cento, e costa un cambio di schema in `fts.py` più una reindicizzazione completa. È un intervento contenuto che non cambia il comportamento: stesse risposte, stesso ranking, stessi estratti.
+La seconda è normalizzare i metadati per atto, spostando le sette colonne `UNINDEXED` in una tabella ordinaria di atti e lasciando nei chunk un solo riferimento. Non cambia il comportamento, perché quelle colonne non sono indicizzate e non entrano nel ranking: stesse risposte, stesso ordine, stessi estratti. Il guadagno però è minore di quanto suggerisca il colpo d'occhio, e va scritto con il conto davanti.
+
+| campo ripetuto su 997.660 chunk | peso oggi |
+|---|---|
+| `path` | 149,6 MB |
+| `urn` | 48,2 MB |
+| `collezione` | 23,8 MB |
+| `tipo` | 18,6 MB |
+| `data` | 10,0 MB |
+| `vigente` | 4,4 MB |
+| `numero` | 3,4 MB |
+| totale | 258,0 MB |
+
+Gli stessi sette campi scritti una volta sola per ciascuno dei 193.109 atti distinti occuperebbero 74,1 MB, e la colonna di collegamento da aggiungere ai chunk ne costa altri 7. Il risparmio netto è quindi di **176,9 MB su 3229, cioè il 5,5 per cento**, e il prezzo è un cambio di schema, la riscrittura di quattro funzioni in `fts.py` e la ricostruzione completa dell'indice. Il rapporto fra i due non regge.
 
 La terza è ridurre il perimetro, ed è una decisione editoriale travestita da decisione tecnica. La collezione «Atti normativi abrogati (in originale)» conta 416.040 righe su 997.660, cioè il 42 per cento delle righe, per 0,402 GB di testo; con la sua quota di indice e di metadati vale circa 0,8-0,9 GB. Prima di proporla ho verificato se fosse ridondante, perché un'abrogazione in originale potrebbe duplicare il testo vigente: non lo è. Confrontando le impronte dei testi, solo 6494 righe su 416.040 hanno un testo identico a un chunk vigente, cioè l'1,6 per cento. Quelle righe sono contenuto, non duplicazione, e toglierle significa rinunciare a cercare nel diritto abrogato, che per una consulenza su fatti passati è esattamente ciò che serve. La decisione non è mia.
 
@@ -73,6 +86,12 @@ Le dimensioni del corpus si misurano sui byte effettivi e non con `du`, che ripo
 (Get-ChildItem -Path data/italia-corpus -Filter *.md -Recurse | Measure-Object -Property Length -Sum).Sum
 ```
 
+## Una cosa da sapere prima di cancellare l'indice
+
+L'indice non si ricostruisce da solo. È fuori da git perché è un prodotto locale, il che può suggerire che sia rigenerabile a costo zero, e non è così: `mcp_server.py` verifica che il file esista e, se manca, rifiuta ogni interrogazione rimandando a `uv run python scripts/bootstrap_index.py`. Cancellarlo significa quindi fermare il consulente finché qualcuno non rilancia a mano la ricostruzione, che rilegge 287.834 file del corpus. Non è una via per recuperare spazio: è un guasto differito.
+
 ## Che cosa è stato deciso
 
-Niente, per ora, ed è una scelta. L'intervento del 2026-10-14 riguardava gli export Discord di un altro progetto, dove la compressione è reversibile bit per bit e la prova di non averla sbagliata si scrive in un manifesto di impronte. Qui nessuna delle strade ha quella proprietà: la seconda e la terza richiedono di ricostruire l'indice, la quarta di riscrivere il modo in cui si ottengono gli estratti. Per ciascuna, prima di percorrerla, va congelata una batteria di interrogazioni reali con le risposte attuali, inclusi gli estratti, e il confronto riga per riga va fatto su una copia del database prima di sostituire l'originale. `scripts/benchmark_retrieval.py` è il punto da cui partire per costruire quella batteria.
+Il 2026-10-14 il proprietario ha deciso di non intervenire, e la ragione è il rapporto fra guadagno e rischio. La prima strada non recupera nulla, la seconda recupera il 5,5 per cento al prezzo di toccare il cuore della ricerca, la quarta richiede di riscrivere il modo in cui si ottengono gli estratti. La terza recupererebbe davvero, circa 0,8 GB, ma togliendo contenuto e non ridondanza, e non è una decisione tecnica. I 3,1 GB restano quindi il prezzo accettato di una ricerca full-text con estratti sopra un corpus da 1,4 GB, su un volume che ha 203 GB liberi su 239.
+
+Questo documento resta perché la decisione è presa sui numeri e i numeri sono qui: se un giorno lo spazio diventasse un vincolo vero, la scelta sarebbe già istruita e non andrebbe rifatta da zero. In quel caso vale una cautela sola, uguale per tutte e tre le strade che modificano qualcosa: prima di percorrerle va congelata una batteria di interrogazioni reali con le risposte attuali, estratti compresi, il lavoro va fatto su una copia del database, e il confronto riga per riga deve tornare identico prima di sostituire l'originale. `scripts/benchmark_retrieval.py` è il punto da cui partire per costruire quella batteria.
